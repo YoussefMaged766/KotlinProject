@@ -1,4 +1,5 @@
 import org.jetbrains.kotlin.gradle.dsl.JvmTarget
+import org.jetbrains.kotlin.gradle.plugin.mpp.apple.XCFramework
 
 plugins {
     alias(libs.plugins.kotlinMultiplatform)
@@ -6,6 +7,8 @@ plugins {
 }
 
 kotlin {
+    // Bundles the iOS frameworks into SharedLogic.xcframework for use outside Xcode (e.g. xtool)
+    val xcf = XCFramework("SharedLogic")
     listOf(
         iosArm64(),
         iosSimulatorArm64()
@@ -13,6 +16,7 @@ kotlin {
         iosTarget.binaries.framework {
             baseName = "SharedLogic"
             isStatic = true
+            xcf.add(this)
         }
     }
     android {
