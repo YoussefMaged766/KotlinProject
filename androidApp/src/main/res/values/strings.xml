@@ -1,3 +1,10 @@
 <resources>
     <string name="app_name">KotlinProject</string>
+    <string name="categories_title">Categories</string>
+    <string name="categories_all_subtitle">Shows every restaurant</string>
+    <string name="action_try_again">Try again</string>
+    <string name="error_no_internet">No connection. Check your internet and try again.</string>
+    <string name="error_timeout">The server took too long to answer. Try again.</string>
+    <string name="error_bad_response">The server sent something the app couldn\'t read.</string>
+    <string name="error_server">Server error %1$s: %2$s</string>
 </resources>
