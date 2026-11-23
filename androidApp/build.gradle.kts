@@ -20,6 +20,8 @@ dependencies {
     implementation(libs.compose.ui)
     implementation(libs.androidx.lifecycle.viewmodelCompose)
     implementation(libs.androidx.lifecycle.runtimeCompose)
+    implementation(libs.koin.android)
+    implementation(libs.koin.androidx.compose)
 
     implementation(libs.compose.uiToolingPreview)
     debugImplementation(libs.compose.uiTooling)

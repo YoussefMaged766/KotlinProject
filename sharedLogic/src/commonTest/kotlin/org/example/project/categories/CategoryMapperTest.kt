@@ -1,13 +1,12 @@
 package org.example.project.categories
 
-import org.example.project.categories.data.mapper.CategoryDtoListMapper
-import org.example.project.categories.data.mapper.CategoryDtoMapper
+import org.example.project.categories.data.mapper.toDomain
 import org.example.project.categories.data.remote.CategoryDto
 import org.example.project.categories.domain.model.Category
 import kotlin.test.Test
 import kotlin.test.assertEquals
 
-class CategoryDtoMapperTest {
+class CategoryMapperTest {
 
     @Test
     fun mapsImageToImageUrl() {
@@ -15,15 +14,14 @@ class CategoryDtoMapperTest {
 
         assertEquals(
             Category(id = "1", name = "Burger", imageUrl = "https://cdn/burger.png", isAll = false),
-            CategoryDtoMapper().map(dto),
+            dto.toDomain(),
         )
     }
 
     @Test
-    fun listMapperKeepsOrder() {
-        val listMapper = CategoryDtoListMapper(itemMapper = CategoryDtoMapper())
+    fun listMappingKeepsOrder() {
         val dtos = listOf(CategoryDto(id = "a", name = "A"), CategoryDto(id = "b", name = "B"))
 
-        assertEquals(listOf("a", "b"), listMapper.map(dtos).map(Category::id))
+        assertEquals(listOf("a", "b"), dtos.toDomain().map(Category::id))
     }
 }

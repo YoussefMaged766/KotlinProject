@@ -14,8 +14,6 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import androidx.lifecycle.viewmodel.compose.viewModel
-import org.example.project.AppGraph
 import org.example.project.R
 import org.example.project.categories.presentation.CategoriesEffect
 import org.example.project.categories.presentation.CategoriesIntent
@@ -24,11 +22,17 @@ import org.example.project.categories.presentation.CategoriesViewModel
 import org.example.project.categories.presentation.ui.section.CategoriesErrorSection
 import org.example.project.categories.presentation.ui.section.CategoriesList
 import org.example.project.categories.presentation.ui.section.CategoriesShimmerList
+import org.koin.androidx.compose.koinViewModel
 
-/** Connects the ViewModel: collects state, handles effects, forwards intents. */
+/**
+ * Connects the ViewModel: collects state, handles effects, forwards intents.
+ * The ViewModel is a default parameter: Koin in the app, a hand-built one in previews and tests.
+ */
 @Composable
-fun CategoriesRoute(graph: AppGraph, onOpenCategory: (categoryId: String) -> Unit) {
-    val viewModel: CategoriesViewModel = viewModel(factory = CategoriesViewModel.factory(graph))
+fun CategoriesRoute(
+    onOpenCategory: (categoryId: String) -> Unit,
+    viewModel: CategoriesViewModel = koinViewModel(),
+) {
     val state by viewModel.state.collectAsStateWithLifecycle()
 
     LaunchedEffect(viewModel) {

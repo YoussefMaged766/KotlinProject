@@ -42,6 +42,7 @@ kotlin {
             implementation(libs.ktor.client.logging)
             implementation(libs.kotlinx.serialization.json)
             api(libs.kotlinx.coroutines.core)
+            api(libs.koin.core)          // api: initKoin(…) takes a KoinAppDeclaration, a Koin type
         }
         androidMain.dependencies {
             implementation(libs.ktor.client.okhttp)
@@ -53,6 +54,7 @@ kotlin {
             implementation(libs.kotlin.test)
             implementation(libs.ktor.client.mock)
             implementation(libs.kotlinx.coroutines.test)
+            implementation(libs.koin.test)
         }
     }
 }

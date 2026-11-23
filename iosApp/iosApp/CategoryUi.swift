@@ -12,32 +12,27 @@ struct CategoryUi: Identifiable, Equatable {
     let subtitle: String?
 }
 
-/// Domain -> UI, one item. The iOS counterpart of Android's CategoryUiMapper.
-struct CategoryUiMapper {
-    func map(_ input: DomainCategory) -> CategoryUi {
+/// Domain -> UI, the Swift twin of Android's Category.toUi().
+extension DomainCategory {
+    func toUi() -> CategoryUi {
         CategoryUi(
-            id: input.id,
-            name: input.name,
-            subtitle: input.isAll
+            id: id,
+            name: name,
+            subtitle: isAll
                 ? String(localized: "categories_all_subtitle", defaultValue: "Shows every restaurant")
                 : nil
         )
     }
 }
 
-/// Domain -> UI, whole list. Delegates to the item mapper.
-struct CategoryUiListMapper {
-    private let itemMapper = CategoryUiMapper()
-
-    func map(_ input: [DomainCategory]) -> [CategoryUi] {
-        input.map(itemMapper.map)
-    }
+extension Array where Element == DomainCategory {
+    func toUi() -> [CategoryUi] { map { $0.toUi() } }
 }
 
-/// DataError -> the message the user sees.
-struct ErrorUiMapper {
-    func map(_ error: any DataError) -> String {
-        switch error {
+/// DataError -> the message the user sees, the Swift twin of Android's DataError.toErrorUi().
+extension DataError {
+    func toMessage() -> String {
+        switch self {
         case is DataErrorNoInternet:
             return String(localized: "error_no_internet", defaultValue: "No connection. Check your internet and try again.")
         case is DataErrorTimeout:

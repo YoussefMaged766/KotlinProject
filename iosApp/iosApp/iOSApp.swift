@@ -3,17 +3,20 @@ import SwiftUI
 
 @main
 struct iOSApp: App {
-    // One AppGraph (and so one HttpClient) for the life of the app, like KotlinProjectApp on Android.
-    private let graph = AppGraph(config: ApiConfig(
-        baseUrl: ApiConfig.companion.DEV_BASE_URL,
-        platform: "ios",
-        appVersion: Bundle.main.infoDictionary?["CFBundleShortVersionString"] as? String ?? "1.0",
-        languageTag: Locale.current.language.languageCode?.identifier ?? "en"
-    ))
+
+    init() {
+        // Exactly once per launch, before any view asks for a dependency.
+        IosKoin.shared.start(config: ApiConfig(
+            baseUrl: ApiConfig.companion.DEV_BASE_URL,
+            platform: "ios",
+            appVersion: Bundle.main.infoDictionary?["CFBundleShortVersionString"] as? String ?? "1.0",
+            languageTag: Locale.current.language.languageCode?.identifier ?? "en"
+        ))
+    }
 
     var body: some Scene {
         WindowGroup {
-            CategoriesView(getCategoriesUseCase: graph.getCategoriesUseCase)
+            CategoriesView(getCategoriesUseCase: IosKoin.shared.getCategoriesUseCase())
         }
     }
 }

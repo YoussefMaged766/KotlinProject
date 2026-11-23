@@ -1,10 +1,7 @@
 package org.example.project.categories.presentation
 
 import androidx.lifecycle.ViewModel
-import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
-import androidx.lifecycle.viewmodel.initializer
-import androidx.lifecycle.viewmodel.viewModelFactory
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.Flow
@@ -14,23 +11,13 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
-import org.example.project.AppGraph
-import org.example.project.categories.domain.model.Category
 import org.example.project.categories.domain.usecase.GetCategoriesUseCase
-import org.example.project.categories.presentation.mapper.CategoryUiListMapper
-import org.example.project.categories.presentation.mapper.CategoryUiMapper
-import org.example.project.categories.presentation.mapper.ErrorUiMapper
-import org.example.project.categories.presentation.model.CategoryUi
-import org.example.project.categories.presentation.model.ErrorUi
-import org.example.project.core.mapper.ListMapper
-import org.example.project.core.mapper.Mapper
+import org.example.project.categories.presentation.mapper.toErrorUi
+import org.example.project.categories.presentation.mapper.toUi
 import org.example.project.network.ApiResult
-import org.example.project.network.DataError
 
 class CategoriesViewModel(
     private val getCategoriesUseCase: GetCategoriesUseCase,
-    private val categoryUiListMapper: ListMapper<Category, CategoryUi>,
-    private val errorUiMapper: Mapper<DataError, ErrorUi>,
 ) : ViewModel() {
 
     private val _state = MutableStateFlow(CategoriesState())
@@ -60,10 +47,10 @@ class CategoriesViewModel(
         loadJob = viewModelScope.launch {
             when (val result = getCategoriesUseCase()) {
                 is ApiResult.Success -> _state.update {
-                    it.copy(isLoading = false, categories = categoryUiListMapper.map(result.data))
+                    it.copy(isLoading = false, categories = result.data.toUi())
                 }
                 is ApiResult.Failure -> _state.update {
-                    it.copy(isLoading = false, error = errorUiMapper.map(result.error))
+                    it.copy(isLoading = false, error = result.error.toErrorUi())
                 }
             }
         }
@@ -71,18 +58,5 @@ class CategoriesViewModel(
 
     private fun sendEffect(effect: CategoriesEffect) {
         viewModelScope.launch { _effect.send(effect) }
-    }
-
-    companion object {
-        /** Factory pattern: construction stays out of composables. Hilt or Koin replaces this later. */
-        fun factory(graph: AppGraph): ViewModelProvider.Factory = viewModelFactory {
-            initializer {
-                CategoriesViewModel(
-                    getCategoriesUseCase = graph.getCategoriesUseCase,
-                    categoryUiListMapper = CategoryUiListMapper(itemMapper = CategoryUiMapper()),
-                    errorUiMapper = ErrorUiMapper(),
-                )
-            }
-        }
     }
 }

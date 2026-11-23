@@ -13,11 +13,9 @@ class MainActivity : ComponentActivity() {
         enableEdgeToEdge()
         super.onCreate(savedInstanceState)
 
-        val graph = (application as KotlinProjectApp).graph
         setContent {
             MaterialTheme {
                 CategoriesRoute(
-                    graph = graph,
                     onOpenCategory = { categoryId -> Log.d("Categories", "Open $categoryId") }, // navigation comes later
                 )
             }

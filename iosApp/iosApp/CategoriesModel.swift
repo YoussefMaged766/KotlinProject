@@ -23,8 +23,6 @@ final class CategoriesModel: ObservableObject {
     var onOpenCategory: (String) -> Void = { categoryId in print("Open \(categoryId)") }
 
     private let getCategoriesUseCase: GetCategoriesUseCase
-    private let categoryUiListMapper = CategoryUiListMapper()
-    private let errorUiMapper = ErrorUiMapper()
     private var loadTask: Task<Void, Never>?
 
     init(getCategoriesUseCase: GetCategoriesUseCase) {
@@ -48,11 +46,11 @@ final class CategoriesModel: ObservableObject {
 
         let result = await fetchCategories()
         if let success = result as? ApiResultSuccess<NSArray> {
-            state.categories = categoryUiListMapper.map(success.data as? [DomainCategory] ?? [])
+            state.categories = (success.data as? [DomainCategory] ?? []).toUi()
         } else if let failure = result as? ApiResultFailure {
-            state.errorMessage = errorUiMapper.map(failure.error)
+            state.errorMessage = failure.error.toMessage()
         } else {
-            state.errorMessage = errorUiMapper.map(DataErrorBadResponse.shared)
+            state.errorMessage = DataErrorBadResponse.shared.toMessage()
         }
         state.isLoading = false
     }
