@@ -9,7 +9,9 @@ import io.ktor.http.headersOf
 import kotlinx.coroutines.test.runTest
 import org.example.project.categories.domain.model.Category
 import org.example.project.categories.domain.usecase.GetCategoriesUseCase
-import org.example.project.network.ApiConfig
+import org.example.project.core.config.AppEnvironment
+import org.example.project.core.config.AppInfo
+import org.example.project.core.config.NetworkConfig
 import org.example.project.core.result.ApiResult
 import org.koin.dsl.koinApplication
 import org.koin.dsl.module
@@ -23,7 +25,7 @@ import kotlin.test.assertEquals
  */
 class KoinGraphTest {
 
-    private val config = ApiConfig(ApiConfig.DEV_BASE_URL, "android", "1.0", "en")
+    private val config = NetworkConfig(AppEnvironment.Dev, AppInfo(platform = "android", appVersion = "1.0", languageTag = "en"))
 
     /** Overrides platformModule's real engine. Declared last, so it wins. */
     private val fakeEngineModule = module {

@@ -8,7 +8,9 @@ import io.ktor.http.HttpStatusCode
 import io.ktor.http.headersOf
 import kotlinx.coroutines.test.runTest
 import org.example.project.categories.data.remote.CategoriesApi
-import org.example.project.network.ApiConfig
+import org.example.project.core.config.AppEnvironment
+import org.example.project.core.config.AppInfo
+import org.example.project.core.config.NetworkConfig
 import org.example.project.core.result.ApiResult
 import org.example.project.core.result.DataError
 import org.example.project.network.createHttpClient
@@ -17,7 +19,7 @@ import kotlin.test.assertEquals
 
 class CategoriesApiTest {
 
-    private val config = ApiConfig(ApiConfig.DEV_BASE_URL, "android", "1.0", "en")
+    private val config = NetworkConfig(AppEnvironment.Dev, AppInfo(platform = "android", appVersion = "1.0", languageTag = "en"))
 
     private fun apiReturning(
         status: HttpStatusCode,

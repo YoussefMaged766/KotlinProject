@@ -14,6 +14,8 @@ import io.ktor.client.request.header
 import io.ktor.http.HttpHeaders
 import io.ktor.serialization.kotlinx.json.json
 import kotlinx.serialization.json.Json
+import org.example.project.core.config.NetworkConfig
+import org.example.project.core.config.NetworkLogLevel
 
 /** One Json configuration, shared by the client and by error decoding. */
 internal val appJson = Json {
@@ -23,36 +25,43 @@ internal val appJson = Json {
     encodeDefaults = true      // never silently drop default-valued fields from request bodies
 }
 
-internal fun createHttpClient(engine: HttpClientEngine, config: ApiConfig): HttpClient =
+/** Every number and switch comes from [config]; nothing is hard-coded here. */
+internal fun createHttpClient(engine: HttpClientEngine, config: NetworkConfig): HttpClient =
     HttpClient(engine) {
-        // We read the envelope on 4xx/5xx ourselves (see ApiResult.kt), so Ktor must not throw on them.
+        // We read the envelope on 4xx/5xx ourselves (see SafeRequest.kt), so Ktor must not throw on them.
         expectSuccess = false
 
         install(ContentNegotiation) { json(appJson) }
 
-        // Applied to every request: like Retrofit's baseUrl + EZeats' header interceptor.
+        // Applied to every request: base URL of the environment + who is calling.
         defaultRequest {
             url(config.baseUrl)
-            header("platform", config.platform)
-            header("version", config.appVersion)
-            header(HttpHeaders.AcceptLanguage, config.languageTag)
+            header("platform", config.appInfo.platform)
+            header("version", config.appInfo.appVersion)
+            header(HttpHeaders.AcceptLanguage, config.appInfo.languageTag)
         }
 
         install(Logging) {
             logger = Logger.SIMPLE
-            level = LogLevel.INFO                 // try LogLevel.BODY while studying
+            level = config.logLevel.toKtor()              // Dev: BODY, Staging: HEADERS, Prod: NONE
             sanitizeHeader { it == HttpHeaders.Authorization }
         }
 
         // ORDER MATTERS: retry is installed BEFORE timeout so a timed-out attempt can be retried.
         install(HttpRequestRetry) {
-            retryOnServerErrors(maxRetries = 2)                     // 5xx
-            retryOnException(maxRetries = 2, retryOnTimeout = true) // dropped connection, timeout
+            retryOnServerErrors(maxRetries = config.maxRetries)                     // 5xx
+            retryOnException(maxRetries = config.maxRetries, retryOnTimeout = true) // dropped connection, timeout
             exponentialDelay()
         }
         install(HttpTimeout) {
-            requestTimeoutMillis = 30_000
-            connectTimeoutMillis = 15_000
-            socketTimeoutMillis = 15_000
+            connectTimeoutMillis = config.connectTimeoutMillis
+            socketTimeoutMillis = config.socketTimeoutMillis
+            requestTimeoutMillis = config.requestTimeoutMillis
         }
     }
+
+internal fun NetworkLogLevel.toKtor(): LogLevel = when (this) {
+    NetworkLogLevel.Body -> LogLevel.BODY
+    NetworkLogLevel.Headers -> LogLevel.HEADERS
+    NetworkLogLevel.None -> LogLevel.NONE
+}
