@@ -46,6 +46,7 @@ kotlin {
         }
         androidMain.dependencies {
             implementation(libs.ktor.client.okhttp)
+            implementation(libs.koin.android)    // androidContext() for the connectivity monitor
         }
         iosMain.dependencies {
             implementation(libs.ktor.client.darwin)

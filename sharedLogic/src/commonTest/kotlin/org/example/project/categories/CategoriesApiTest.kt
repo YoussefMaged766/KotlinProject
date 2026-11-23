@@ -11,6 +11,8 @@ import org.example.project.categories.data.remote.CategoriesApi
 import org.example.project.core.config.AppEnvironment
 import org.example.project.core.config.AppInfo
 import org.example.project.core.config.NetworkConfig
+import org.example.project.core.connectivity.FakeConnectivityMonitor
+import org.example.project.core.connectivity.NetworkStatus
 import org.example.project.core.result.ApiResult
 import org.example.project.core.result.DataError
 import org.example.project.network.ErrorMapper
@@ -33,7 +35,7 @@ class CategoriesApiTest {
             onRequest(request)
             respond(body, status, headersOf(HttpHeaders.ContentType, "application/json"))
         }
-        return CategoriesApi(createHttpClient(engine, config), RequestExecutor(ErrorMapper(isOnline = { true })))
+        return CategoriesApi(createHttpClient(engine, config), RequestExecutor(ErrorMapper(isOnline = { true }), FakeConnectivityMonitor(NetworkStatus.Online)))
     }
 
     @Test

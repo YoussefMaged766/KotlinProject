@@ -17,6 +17,8 @@ import kotlinx.io.IOException
 import org.example.project.core.config.AppEnvironment
 import org.example.project.core.config.AppInfo
 import org.example.project.core.config.NetworkConfig
+import org.example.project.core.connectivity.FakeConnectivityMonitor
+import org.example.project.core.connectivity.NetworkStatus
 import org.example.project.core.result.ApiResult
 import org.example.project.core.result.DataError
 import org.example.project.core.result.TimeoutKind
@@ -41,7 +43,7 @@ class ErrorMapperTest {
 
     private suspend fun errorFor(isOnline: Boolean = true, handler: MockRequestHandler): DataError {
         val client = createHttpClient(MockEngine(handler), config)
-        val executor = RequestExecutor(ErrorMapper(isOnline = { isOnline }))
+        val executor = RequestExecutor(ErrorMapper(isOnline = { isOnline }), FakeConnectivityMonitor(NetworkStatus.Online))
         val result = executor.execute<List<String>> { client.get("v1/things") }
         return assertIs<ApiResult.Failure>(result).error
     }
@@ -170,7 +172,7 @@ class ErrorMapperTest {
     @Test
     fun cancellationIsRethrownNeverAnError() = runTest {
         val client = createHttpClient(MockEngine { throw CancellationException("screen closed") }, config)
-        val executor = RequestExecutor(ErrorMapper(isOnline = { true }))
+        val executor = RequestExecutor(ErrorMapper(isOnline = { true }), FakeConnectivityMonitor(NetworkStatus.Online))
 
         assertFailsWith<CancellationException> {
             executor.execute<List<String>> { client.post("v1/things") }

@@ -24,9 +24,8 @@ import org.example.project.core.result.TimeoutKind
  * The single place that turns "something went wrong" into a [DataError].
  * Knows about Ktor exceptions, HTTP statuses and the server's error envelope; nothing above it does.
  *
- * @param isOnline whether the device is online right now. Used to tell a dropped connection
- *   ([DataError.ConnectionLost]) from being offline ([DataError.NoInternet]). Phase 3 wires in the
- *   real ConnectivityMonitor; until then the app passes `{ true }`.
+ * @param isOnline whether the device is online right now (from the ConnectivityMonitor). Used to tell
+ *   a dropped connection ([DataError.ConnectionLost]) from being offline ([DataError.NoInternet]).
  */
 internal class ErrorMapper(private val isOnline: () -> Boolean) {
 

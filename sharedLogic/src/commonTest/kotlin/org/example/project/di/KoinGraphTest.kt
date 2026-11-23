@@ -12,6 +12,9 @@ import org.example.project.categories.domain.usecase.GetCategoriesUseCase
 import org.example.project.core.config.AppEnvironment
 import org.example.project.core.config.AppInfo
 import org.example.project.core.config.NetworkConfig
+import org.example.project.core.connectivity.ConnectivityMonitor
+import org.example.project.core.connectivity.FakeConnectivityMonitor
+import org.example.project.core.connectivity.NetworkStatus
 import org.example.project.core.result.ApiResult
 import org.koin.dsl.koinApplication
 import org.koin.dsl.module
@@ -27,8 +30,12 @@ class KoinGraphTest {
 
     private val config = NetworkConfig(AppEnvironment.Dev, AppInfo(platform = "android", appVersion = "1.0", languageTag = "en"))
 
-    /** Overrides platformModule's real engine. Declared last, so it wins. */
+    /**
+     * Overrides platformModule's real engine and connectivity monitor (the Android one needs a real
+     * Context). Declared last, so it wins.
+     */
     private val fakeEngineModule = module {
+        single<ConnectivityMonitor> { FakeConnectivityMonitor(NetworkStatus.Online) }
         single<HttpClientEngine> {
             MockEngine {
                 respond(
