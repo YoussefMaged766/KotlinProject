@@ -10,7 +10,7 @@ import kotlinx.coroutines.test.runTest
 import org.example.project.categories.domain.model.Category
 import org.example.project.categories.domain.usecase.GetCategoriesUseCase
 import org.example.project.network.ApiConfig
-import org.example.project.network.ApiResult
+import org.example.project.core.result.ApiResult
 import org.koin.dsl.koinApplication
 import org.koin.dsl.module
 import kotlin.test.Test

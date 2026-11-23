@@ -2,8 +2,8 @@ package org.example.project.categories.domain.usecase
 
 import org.example.project.categories.domain.model.Category
 import org.example.project.categories.domain.repository.CategoriesRepository
-import org.example.project.network.ApiResult
-import org.example.project.network.map
+import org.example.project.core.result.ApiResult
+import org.example.project.core.result.map
 
 /** One use case, one public `invoke()`. Business rules live here, not in the UI. */
 class GetCategoriesUseCase(private val repository: CategoriesRepository) {

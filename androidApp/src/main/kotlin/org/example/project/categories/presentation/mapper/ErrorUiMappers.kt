@@ -2,7 +2,7 @@ package org.example.project.categories.presentation.mapper
 
 import org.example.project.R
 import org.example.project.categories.presentation.model.ErrorUi
-import org.example.project.network.DataError
+import org.example.project.core.result.DataError
 
 /** DataError -> the string resource (and arguments) the error section shows. */
 internal fun DataError.toErrorUi(): ErrorUi = when (this) {

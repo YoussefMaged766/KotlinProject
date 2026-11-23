@@ -9,8 +9,8 @@ import io.ktor.http.headersOf
 import kotlinx.coroutines.test.runTest
 import org.example.project.categories.data.remote.CategoriesApi
 import org.example.project.network.ApiConfig
-import org.example.project.network.ApiResult
-import org.example.project.network.DataError
+import org.example.project.core.result.ApiResult
+import org.example.project.core.result.DataError
 import org.example.project.network.createHttpClient
 import kotlin.test.Test
 import kotlin.test.assertEquals

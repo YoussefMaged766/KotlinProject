@@ -14,7 +14,7 @@ import kotlinx.coroutines.launch
 import org.example.project.categories.domain.usecase.GetCategoriesUseCase
 import org.example.project.categories.presentation.mapper.toErrorUi
 import org.example.project.categories.presentation.mapper.toUi
-import org.example.project.network.ApiResult
+import org.example.project.core.result.ApiResult
 
 class CategoriesViewModel(
     private val getCategoriesUseCase: GetCategoriesUseCase,

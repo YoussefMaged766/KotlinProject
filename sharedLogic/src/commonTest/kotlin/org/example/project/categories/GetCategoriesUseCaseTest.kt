@@ -4,8 +4,8 @@ import kotlinx.coroutines.test.runTest
 import org.example.project.categories.domain.model.Category
 import org.example.project.categories.domain.repository.CategoriesRepository
 import org.example.project.categories.domain.usecase.GetCategoriesUseCase
-import org.example.project.network.ApiResult
-import org.example.project.network.DataError
+import org.example.project.core.result.ApiResult
+import org.example.project.core.result.DataError
 import kotlin.test.Test
 import kotlin.test.assertEquals
 
