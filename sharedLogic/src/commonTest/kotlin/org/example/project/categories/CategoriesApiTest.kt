@@ -13,9 +13,12 @@ import org.example.project.core.config.AppInfo
 import org.example.project.core.config.NetworkConfig
 import org.example.project.core.result.ApiResult
 import org.example.project.core.result.DataError
+import org.example.project.network.ErrorMapper
+import org.example.project.network.RequestExecutor
 import org.example.project.network.createHttpClient
 import kotlin.test.Test
 import kotlin.test.assertEquals
+import kotlin.test.assertIs
 
 class CategoriesApiTest {
 
@@ -30,7 +33,7 @@ class CategoriesApiTest {
             onRequest(request)
             respond(body, status, headersOf(HttpHeaders.ContentType, "application/json"))
         }
-        return CategoriesApi(createHttpClient(engine, config))
+        return CategoriesApi(createHttpClient(engine, config), RequestExecutor(ErrorMapper(isOnline = { true })))
     }
 
     @Test
@@ -62,6 +65,8 @@ class CategoriesApiTest {
             """{"code":400,"message":"Validation failed","data":{"errors":["longitude: required"]}}""",
         )
         val result = api.getCategories() as ApiResult.Failure
-        assertEquals(DataError.Server(400, "Validation failed"), result.error)
+        val validation = assertIs<DataError.Validation>(result.error)
+        assertEquals(mapOf("longitude" to "required"), validation.fieldErrors)
+        assertEquals("Validation failed", validation.details?.serverMessage)
     }
 }

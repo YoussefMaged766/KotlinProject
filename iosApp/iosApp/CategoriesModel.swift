@@ -50,7 +50,7 @@ final class CategoriesModel: ObservableObject {
         } else if let failure = result as? ApiResultFailure {
             state.errorMessage = failure.error.toMessage()
         } else {
-            state.errorMessage = DataErrorBadResponse.shared.toMessage()
+            state.errorMessage = DataErrorUnknown(details: nil).toMessage()
         }
         state.isLoading = false
     }

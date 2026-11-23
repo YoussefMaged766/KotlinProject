@@ -6,6 +6,7 @@ import org.example.project.categories.domain.repository.CategoriesRepository
 import org.example.project.categories.domain.usecase.GetCategoriesUseCase
 import org.example.project.core.result.ApiResult
 import org.example.project.core.result.DataError
+import org.example.project.core.result.TimeoutKind
 import kotlin.test.Test
 import kotlin.test.assertEquals
 
@@ -29,8 +30,8 @@ class GetCategoriesUseCaseTest {
 
     @Test
     fun failurePassesThroughUnchanged() = runTest {
-        val useCase = GetCategoriesUseCase(FakeCategoriesRepository(ApiResult.Failure(DataError.Timeout)))
+        val useCase = GetCategoriesUseCase(FakeCategoriesRepository(ApiResult.Failure(DataError.Timeout(TimeoutKind.Request))))
 
-        assertEquals(ApiResult.Failure(DataError.Timeout), useCase())
+        assertEquals(ApiResult.Failure(DataError.Timeout(TimeoutKind.Request)), useCase())
     }
 }
