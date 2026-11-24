@@ -1,25 +1,16 @@
 import Foundation
 @preconcurrency import SharedLogic
 
-/// What an error section renders. The Swift twin of Android's ErrorUi.
+/// One error, ready to draw full screen, in a toast or in a dialog.
 struct ErrorUi: Equatable {
     let text: String
     let technicalDetails: String?
     let canRetry: Bool
 }
 
-extension ErrorDisplay {
-    /// Interim until phase 9's error host: this screen only has room for a full-screen error, so every other
-    /// display falls back to a generic one instead of leaving the screen empty.
-    func toErrorUi() -> ErrorUi {
-        guard let fullScreen = self as? ErrorDisplayFullScreen else {
-            return ErrorUi(text: MessageKey.generic.toText(), technicalDetails: nil, canRetry: true)
-        }
-        return ErrorUi(
-            text: fullScreen.message.serverText ?? fullScreen.message.key.toText(),
-            technicalDetails: fullScreen.message.technicalDetails,
-            canRetry: fullScreen.canRetry
-        )
+extension ErrorMessage {
+    func toUi(canRetry: Bool) -> ErrorUi {
+        ErrorUi(text: serverText ?? key.toText(), technicalDetails: technicalDetails, canRetry: canRetry)
     }
 }
 

@@ -83,22 +83,21 @@ fun CategoriesScreen(
 ) {
     val onRetry = remember(onIntent) { { onIntent(CategoriesIntent.Retry) } }
     val onRefresh = remember(onIntent) { { onIntent(CategoriesIntent.Refresh) } }
-    val screen = state.screen
 
     Scaffold(
         topBar = { TopAppBar(title = { Text(stringResource(R.string.categories_title)) }) },
         snackbarHost = { SnackbarHost(snackbarHostState) },
     ) { innerPadding ->
         Column(Modifier.fillMaxSize().padding(innerPadding)) {
-            AnimatedVisibility(screen.isSlow) { SlowConnectionHint() }
+            AnimatedVisibility(state.isSlow) { SlowConnectionHint() }
 
-            when (val content = screen.content) {
+            when (val content = state.content) {
                 Content.Loading -> CategoriesShimmerList()
                 is Content.Failed -> FullScreenError(display = content.display, onRetry = onRetry)
-                is Content.Loaded -> PullToRefreshBox(screen.isRefreshing, onRefresh) {
+                is Content.Loaded -> PullToRefreshBox(state.isRefreshing, onRefresh) {
                     CategoriesList(categories = content.data, onIntent = onIntent)
                 }
-                Content.Empty -> PullToRefreshBox(screen.isRefreshing, onRefresh) { CategoriesEmptySection() }
+                Content.Empty -> PullToRefreshBox(state.isRefreshing, onRefresh) { CategoriesEmptySection() }
             }
         }
     }

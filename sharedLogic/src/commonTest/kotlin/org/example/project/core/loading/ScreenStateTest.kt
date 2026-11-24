@@ -12,7 +12,7 @@ import kotlin.test.assertEquals
 class ScreenStateTest {
 
     private val timeout = ErrorDisplay.FullScreen(ErrorMessage(MessageKey.Timeout), canRetry = true)
-    private val toast = ErrorDisplay.Toast(ErrorMessage(MessageKey.Timeout))
+    private val toast = ErrorDisplay.Toast(ErrorMessage(MessageKey.Timeout), canRetry = true)
     private val genericRetry = ErrorDisplay.FullScreen(ErrorMessage(MessageKey.Generic), canRetry = true)
 
     private val first = ScreenState<List<String>>()

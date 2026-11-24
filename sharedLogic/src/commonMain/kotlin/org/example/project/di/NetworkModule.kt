@@ -1,11 +1,13 @@
 package org.example.project.di
 
+import org.example.project.core.app.AppStatus
 import org.example.project.core.config.NetworkConfig
 import org.example.project.core.connectivity.ConnectivityMonitor
 import org.example.project.core.error.ErrorPresenter
 import org.example.project.core.events.GlobalEventBus
 import org.example.project.core.events.GlobalEvents
 import org.example.project.core.loading.AutoReloadPolicy
+import org.example.project.core.loading.ScreenLoaderFactory
 import org.example.project.network.ErrorMapper
 import org.example.project.network.RequestExecutor
 import org.example.project.network.RetryPolicy
@@ -27,5 +29,7 @@ internal fun networkModule(config: NetworkConfig): Module = module {
     singleOf(::GlobalEventBus) bind GlobalEvents::class           // single: shared by the executor and the app root
     single { ErrorPresenter(get<NetworkConfig>().showTechnicalDetails) }
     single { AutoReloadPolicy(connectivity = get()) }
+    singleOf(::ScreenLoaderFactory)
+    singleOf(::AppStatus)
     singleOf(::RequestExecutor)
 }

@@ -1,10 +1,11 @@
 package org.example.project.di
 
+import org.example.project.categories.domain.model.Category
 import org.example.project.categories.domain.usecase.GetCategoriesUseCase
 import org.example.project.core.config.AppEnvironment
 import org.example.project.core.config.AppInfo
 import org.example.project.core.config.NetworkConfig
-import org.example.project.core.error.ErrorPresenter
+import org.example.project.core.loading.ScreenLoaderFactory
 import org.koin.core.component.KoinComponent
 import org.koin.core.component.get
 
@@ -27,7 +28,10 @@ object IosKoin : KoinComponent {
         )
     }
 
-    fun getCategoriesUseCase(): GetCategoriesUseCase = get()
+    fun app(): IosApp = IosApp(get())
 
-    fun errorPresenter(): ErrorPresenter = get()
+    fun categoriesScreen(): IosScreen<List<Category>> {
+        val getCategories = get<GetCategoriesUseCase>()
+        return IosScreen { scope -> get<ScreenLoaderFactory>().create(scope) { getCategories() } }
+    }
 }

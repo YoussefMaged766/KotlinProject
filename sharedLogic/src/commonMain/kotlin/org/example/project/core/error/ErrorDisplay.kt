@@ -46,7 +46,7 @@ data class ErrorMessage(
 /** How to show an error. Each platform renders these in one place, so features never draw their own error UI. */
 sealed interface ErrorDisplay {
     data class FullScreen(val message: ErrorMessage, val canRetry: Boolean) : ErrorDisplay
-    data class Toast(val message: ErrorMessage) : ErrorDisplay
+    data class Toast(val message: ErrorMessage, val canRetry: Boolean) : ErrorDisplay
     data class Dialog(val message: ErrorMessage, val canRetry: Boolean) : ErrorDisplay
 
     /** Field name to the server's message for it, shown under that field. Never empty. */

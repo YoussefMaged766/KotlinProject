@@ -2,75 +2,95 @@ import Foundation
 @preconcurrency import SharedLogic
 
 /// The iOS counterpart of CategoriesViewModel: State + Intent + a single `send(_:)` entry point.
+/// Loading follows the shared rules in ScreenLoader; only what is specific to this screen lives here.
 @MainActor
 final class CategoriesModel: ObservableObject {
 
-    struct State {
-        var isLoading = true
-        var categories: [CategoryUi] = []
-        var error: ErrorUi? = nil
+    struct State: Equatable {
+        enum Content: Equatable {
+            case loading
+            case loaded([CategoryUi])
+            case empty
+            case failed(ErrorUi)
+        }
+
+        var content = Content.loading
+        var isRefreshing = false
+        var isSlow = false
     }
 
     enum Intent {
-        case loadCategories
+        case appeared
+        case disappeared
         case retry
+        case refresh
         case categoryTapped(id: String)
     }
 
     @Published private(set) var state = State()
 
+    let errorHost = ErrorHost()
+
     /// Effect: one-off navigation, handled by whoever owns the view.
     var onOpenCategory: (String) -> Void = { categoryId in print("Open \(categoryId)") }
 
-    private let getCategoriesUseCase: GetCategoriesUseCase
-    private let errorPresenter: ErrorPresenter
-    private var loadTask: Task<Void, Never>?
+    // Only used on the main actor; unsafe just lets deinit, which belongs to no actor, close it.
+    private nonisolated(unsafe) let screen: IosScreen<NSArray>
+    private var stateSubscription: FlowSubscription?
+    private var effectSubscription: FlowSubscription?
 
-    init(getCategoriesUseCase: GetCategoriesUseCase, errorPresenter: ErrorPresenter) {
-        self.getCategoriesUseCase = getCategoriesUseCase
-        self.errorPresenter = errorPresenter
+    init(screen: IosScreen<NSArray>) {
+        self.screen = screen
+        screen.load()
     }
+
+    deinit { screen.close() }
 
     /// The only entry point, like onIntent on Android.
     func send(_ intent: Intent) {
         switch intent {
-        case .loadCategories, .retry:
-            loadTask?.cancel()
-            loadTask = Task { await loadCategories() }
-        case .categoryTapped(let id):
-            onOpenCategory(id)
+        case .appeared: startWatching()
+        case .disappeared: stopWatching()
+        case .retry, .refresh: screen.load()
+        case .categoryTapped(let id): onOpenCategory(id)
         }
     }
 
-    private func loadCategories() async {
-        state.isLoading = true
-        state.error = nil
-
-        let result = await fetchCategories()
-        if let success = result as? ApiResultSuccess<NSArray> {
-            state.categories = (success.data as? [DomainCategory] ?? []).toUi()
-        } else {
-            let error: any DataError = (result as? ApiResultFailure)?.error ?? DataErrorUnknown(details: nil)
-            state.error = errorPresenter.present(error: error, kind: .initialload).toErrorUi()
-        }
-        state.isLoading = false
+    /// For pull to refresh: SwiftUI shows its spinner until this returns.
+    func refresh() async {
+        send(.refresh)
+        repeat {
+            try? await Task.sleep(for: .milliseconds(100))
+        } while state.isRefreshing && !Task.isCancelled
     }
 
-    /// Kotlin suspend functions must be started on the main thread. We are on the main actor here,
-    /// so we call the completion-handler form directly instead of Swift's `async` import.
-    private func fetchCategories() async -> (any ApiResult)? {
-        let box = await withCheckedContinuation { (continuation: CheckedContinuation<KotlinResultBox, Never>) in
-            getCategoriesUseCase.invoke { result, _ in
-                continuation.resume(returning: KotlinResultBox(value: result))
-            }
-        }
-        return box.value
+    /// Only while visible: ScreenLoader auto reloads the screens that are being watched.
+    private func startWatching() {
+        guard stateSubscription == nil else { return }
+        stateSubscription = screen.watchState { [weak self] state in self?.state = toCategoriesState(state) }
+        effectSubscription = screen.watchEffects { [weak self] effect in self?.errorHost.show(effect) }
+    }
+
+    private func stopWatching() {
+        stateSubscription?.cancel()
+        stateSubscription = nil
+        effectSubscription?.cancel()
+        effectSubscription = nil
     }
 }
 
-/// Kotlin objects aren't marked Sendable, so Swift 6 refuses to pass one through a continuation.
-/// Kotlin calls the completion handler on the main thread, and we read it on the main actor,
-/// so crossing here is safe; the box just tells the compiler so.
-private struct KotlinResultBox: @unchecked Sendable {
-    let value: (any ApiResult)?
+/// Shared state -> what the view renders. A function, because Swift can't extend a generic Kotlin class for one type
+/// argument. Swift sees Kotlin's List as NSArray, hence the casts.
+private func toCategoriesState(_ shared: ScreenState<NSArray>) -> CategoriesModel.State {
+    let content: CategoriesModel.State.Content
+    if let loaded = shared.content as? ContentLoaded<NSArray> {
+        content = .loaded((loaded.data as? [DomainCategory] ?? []).toUi())
+    } else if let failed = shared.content as? ContentFailed {
+        content = .failed(failed.display.message.toUi(canRetry: failed.display.canRetry))
+    } else if shared.content is ContentEmpty {
+        content = .empty
+    } else {
+        content = .loading
+    }
+    return CategoriesModel.State(content: content, isRefreshing: shared.isRefreshing, isSlow: shared.isSlow)
 }

@@ -13,7 +13,5 @@ sealed interface CategoriesIntent {
     /** Pull to refresh. */
     data object Refresh : CategoriesIntent
 
-    /** Sent by the ViewModel itself, from AutoReloadPolicy. */
-    data object NetworkRestored : CategoriesIntent
     data class CategoryClicked(val categoryId: String) : CategoriesIntent
 }

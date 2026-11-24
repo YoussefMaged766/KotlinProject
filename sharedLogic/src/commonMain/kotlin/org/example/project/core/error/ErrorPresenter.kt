@@ -26,7 +26,7 @@ class ErrorPresenter(private val showTechnicalDetails: Boolean) {
     private fun presentRefresh(error: DataError): ErrorDisplay = when (error) {
         is DataError.NoInternet -> ErrorDisplay.Silent          // the banner already says it
         is DataError.Business -> ErrorDisplay.Dialog(messageFor(error), canRetry = false)
-        else -> ErrorDisplay.Toast(messageFor(error))
+        else -> ErrorDisplay.Toast(messageFor(error), error.canRetry)
     }
 
     private fun presentUserAction(error: DataError): ErrorDisplay = when {
@@ -34,7 +34,7 @@ class ErrorPresenter(private val showTechnicalDetails: Boolean) {
             message = messageFor(error, MessageKey.OutcomeUnknown),
             canRetry = error !is DataError.BadResponse,         // the server said yes: retrying would do it twice
         )
-        error is DataError.NoInternet || error is DataError.RateLimited -> ErrorDisplay.Toast(messageFor(error))
+        error is DataError.NoInternet || error is DataError.RateLimited -> ErrorDisplay.Toast(messageFor(error), error.canRetry)
         error is DataError.Validation && error.fieldErrors.isNotEmpty() -> ErrorDisplay.Inline(error.fieldErrors)
         else -> ErrorDisplay.Dialog(messageFor(error), error.canRetry)
     }

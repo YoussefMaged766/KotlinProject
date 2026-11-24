@@ -30,7 +30,7 @@ class ErrorPresenterTest {
 
     private fun message(key: MessageKey) = ErrorMessage(key)
     private fun fullScreen(key: MessageKey, canRetry: Boolean) = FullScreen(message(key), canRetry)
-    private fun toast(key: MessageKey) = Toast(message(key))
+    private fun toast(key: MessageKey, canRetry: Boolean = true) = Toast(message(key), canRetry)
     private fun dialog(key: MessageKey, canRetry: Boolean) = Dialog(message(key), canRetry)
 
     private fun assertRow(
@@ -78,7 +78,7 @@ class ErrorPresenterTest {
     fun validationGoesUnderTheFields() = assertRow(
         DataError.Validation(mapOf("email" to "is not valid"), post),
         fullScreen(MessageKey.InvalidInput, canRetry = false),
-        toast(MessageKey.InvalidInput),
+        toast(MessageKey.InvalidInput, canRetry = false),
         Inline(mapOf("email" to "is not valid")),
     )
 
@@ -106,7 +106,7 @@ class ErrorPresenterTest {
         assertRow(
             it,
             fullScreen(MessageKey.NotAllowed, canRetry = false),
-            toast(MessageKey.NotAllowed),
+            toast(MessageKey.NotAllowed, canRetry = false),
             dialog(MessageKey.NotAllowed, canRetry = false),
         )
     }
@@ -115,7 +115,7 @@ class ErrorPresenterTest {
     fun notFound() = assertRow(
         DataError.NotFound(get),
         fullScreen(MessageKey.NotFound, canRetry = false),
-        toast(MessageKey.NotFound),
+        toast(MessageKey.NotFound, canRetry = false),
         dialog(MessageKey.NotFound, canRetry = false),
     )
 

@@ -9,6 +9,9 @@ import kotlinx.coroutines.test.runTest
 import kotlinx.coroutines.test.setMain
 import org.example.project.FakeConnectivityMonitor
 import org.example.project.FakeGlobalEvents
+import org.example.project.core.app.AppBlock
+import org.example.project.core.app.AppState
+import org.example.project.core.app.AppStatus
 import org.example.project.core.connectivity.NetworkStatus
 import org.example.project.core.events.GlobalEvent
 import kotlin.test.AfterTest
@@ -31,7 +34,7 @@ class AppViewModelTest {
 
     @Test
     fun theBannerFollowsTheNetwork() = runTest(dispatcher) {
-        val viewModel = AppViewModel(connectivity, events)
+        val viewModel = AppViewModel(AppStatus(connectivity, events))
         runCurrent()
         assertEquals(AppState(), viewModel.state.value)
 
@@ -47,12 +50,12 @@ class AppViewModelTest {
     @Test
     fun startingOfflineShowsTheBannerFromTheFirstFrame() = runTest(dispatcher) {
         connectivity.set(NetworkStatus.Offline)
-        assertEquals(true, AppViewModel(connectivity, events).state.value.isOffline)
+        assertEquals(true, AppViewModel(AppStatus(connectivity, events)).state.value.isOffline)
     }
 
     @Test
     fun maintenanceBlocksTheAppUntilTheUserTriesAgain() = runTest(dispatcher) {
-        val viewModel = AppViewModel(connectivity, events)
+        val viewModel = AppViewModel(AppStatus(connectivity, events))
         events.raise(GlobalEvent.Maintenance)
         runCurrent()
         assertEquals(AppBlock.Maintenance, viewModel.state.value.blockedBy)
@@ -64,7 +67,7 @@ class AppViewModelTest {
 
     @Test
     fun anUpdateOutranksMaintenance() = runTest(dispatcher) {
-        val viewModel = AppViewModel(connectivity, events)
+        val viewModel = AppViewModel(AppStatus(connectivity, events))
         events.raise(GlobalEvent.Maintenance)
         events.raise(GlobalEvent.UpgradeRequired)
         runCurrent()
@@ -73,7 +76,7 @@ class AppViewModelTest {
 
     @Test
     fun anExpiredSessionIsShownUntilConfirmed() = runTest(dispatcher) {
-        val viewModel = AppViewModel(connectivity, events)
+        val viewModel = AppViewModel(AppStatus(connectivity, events))
         events.raise(GlobalEvent.SessionExpired)
         runCurrent()
         assertEquals(true, viewModel.state.value.isSessionExpired)

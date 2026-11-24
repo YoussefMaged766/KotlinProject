@@ -53,7 +53,7 @@ class ErrorHostState internal constructor(
     suspend fun show(display: ErrorDisplay) {
         when (display) {
             is ErrorDisplay.Toast -> {
-                val result = showSnackbar(display.message.text(), resources.getString(R.string.action_try_again), SnackbarDuration.Long)
+                val result = showSnackbar(display.message.text(), resources.getString(R.string.action_try_again).takeIf { display.canRetry }, SnackbarDuration.Long)
                 if (result == SnackbarResult.ActionPerformed) onRetry()
             }
 

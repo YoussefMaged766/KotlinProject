@@ -35,6 +35,8 @@ import androidx.compose.ui.unit.dp
 import androidx.core.net.toUri
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import org.example.project.R
+import org.example.project.core.app.AppBlock
+import org.example.project.core.app.AppState
 import org.koin.androidx.compose.koinViewModel
 
 /** Wraps every screen. Nothing inside it needs to know about the banner or the global events. */
