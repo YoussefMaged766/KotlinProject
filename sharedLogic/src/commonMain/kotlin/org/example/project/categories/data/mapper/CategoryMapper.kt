@@ -11,4 +11,5 @@ internal fun CategoryDto.toDomain(): Category = Category(
     isAll = isAll,
 )
 
-internal fun List<CategoryDto>.toDomain(): List<Category> = map(CategoryDto::toDomain)
+/** The first of each id wins: an id identifies a category everywhere above, e.g. as a list key. */
+internal fun List<CategoryDto>.toDomain(): List<Category> = distinctBy(CategoryDto::id).map(CategoryDto::toDomain)

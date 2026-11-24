@@ -7,6 +7,7 @@ import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.compose.material3.MaterialTheme
 import org.example.project.categories.presentation.ui.CategoriesRoute
+import org.example.project.core.presentation.root.AppRoot
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -15,9 +16,11 @@ class MainActivity : ComponentActivity() {
 
         setContent {
             MaterialTheme {
-                CategoriesRoute(
-                    onOpenCategory = { categoryId -> Log.d("Categories", "Open $categoryId") }, // navigation comes later
-                )
+                AppRoot {
+                    CategoriesRoute(
+                        onOpenCategory = { categoryId -> Log.d("Categories", "Open $categoryId") }, // navigation comes later
+                    )
+                }
             }
         }
     }

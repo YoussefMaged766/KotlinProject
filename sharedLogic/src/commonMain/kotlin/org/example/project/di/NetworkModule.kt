@@ -4,6 +4,7 @@ import org.example.project.core.config.NetworkConfig
 import org.example.project.core.connectivity.ConnectivityMonitor
 import org.example.project.core.error.ErrorPresenter
 import org.example.project.core.events.GlobalEventBus
+import org.example.project.core.events.GlobalEvents
 import org.example.project.core.loading.AutoReloadPolicy
 import org.example.project.network.ErrorMapper
 import org.example.project.network.RequestExecutor
@@ -11,6 +12,7 @@ import org.example.project.network.RetryPolicy
 import org.example.project.network.createHttpClient
 import org.koin.core.module.Module
 import org.koin.core.module.dsl.singleOf
+import org.koin.dsl.bind
 import org.koin.dsl.module
 
 /** A function, not a val: NetworkConfig is only known at startup, so the module is built then. */
@@ -22,7 +24,7 @@ internal fun networkModule(config: NetworkConfig): Module = module {
         ErrorMapper(isOnline = { connectivity.status.value.isConnected })
     }
     single { RetryPolicy(maxRetries = get<NetworkConfig>().maxRetries) }
-    singleOf(::GlobalEventBus)                                    // single: shared by the executor and the app root
+    singleOf(::GlobalEventBus) bind GlobalEvents::class           // single: shared by the executor and the app root
     single { ErrorPresenter(get<NetworkConfig>().showTechnicalDetails) }
     single { AutoReloadPolicy(connectivity = get()) }
     singleOf(::RequestExecutor)

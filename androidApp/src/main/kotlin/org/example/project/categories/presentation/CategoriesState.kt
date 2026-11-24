@@ -1,13 +1,12 @@
 package org.example.project.categories.presentation
 
 import androidx.compose.runtime.Immutable
+import kotlinx.collections.immutable.ImmutableList
 import org.example.project.categories.presentation.model.CategoryUi
-import org.example.project.categories.presentation.model.ErrorUi
+import org.example.project.core.loading.ScreenState
 
 /** Everything the screen needs to render. Immutable; only the ViewModel creates new copies. */
 @Immutable
 data class CategoriesState(
-    val isLoading: Boolean = true,
-    val categories: List<CategoryUi> = emptyList(),
-    val error: ErrorUi? = null,
+    val screen: ScreenState<ImmutableList<CategoryUi>> = ScreenState(),
 )

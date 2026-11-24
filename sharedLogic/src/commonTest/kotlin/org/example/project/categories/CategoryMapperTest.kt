@@ -19,6 +19,14 @@ class CategoryMapperTest {
     }
 
     @Test
+    fun aRepeatedIdIsKeptOnce() {
+        // Ids are list keys on both platforms; Compose crashes on a duplicate.
+        val dtos = listOf(CategoryDto(id = "a", name = "A"), CategoryDto(id = "a", name = "A again"), CategoryDto(id = "b", name = "B"))
+
+        assertEquals(listOf("A", "B"), dtos.toDomain().map(Category::name))
+    }
+
+    @Test
     fun listMappingKeepsOrder() {
         val dtos = listOf(CategoryDto(id = "a", name = "A"), CategoryDto(id = "b", name = "B"))
 

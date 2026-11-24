@@ -3,6 +3,7 @@ package org.example.project.network
 import io.ktor.client.request.setBody
 import io.ktor.http.HttpMethod
 import kotlinx.coroutines.runBlocking
+import okhttp3.ConnectionPool
 import okhttp3.Dns
 import org.example.project.core.config.AppEnvironment
 import org.example.project.core.config.AppInfo
@@ -67,6 +68,29 @@ class OkHttpEngineTest {
             runBlocking {
                 val result = testExecutor(engine, config).get<List<String>>(server.url.replace("127.0.0.1", "two-addresses.test"))
                 assertIs<ApiResult.Success<*>>(result, "$result")
+            }
+        }
+    }
+
+    @Test
+    fun droppingIdleConnectionsStopsADeadOneBeingReused() {
+        // After a network change the old connection looks open but never answers again.
+        val connectionOfTheGet = CopyOnWriteArrayList<Socket>()
+        RawServer { _, socket ->
+            if (connectionOfTheGet.isEmpty() || socket !in connectionOfTheGet) {
+                connectionOfTheGet += socket
+                socket.answerOk()
+            }
+        }.use { server ->
+            runBlocking {
+                val pool = ConnectionPool()
+                val executor = testExecutor(createOkHttpEngine(pool), config.copy(socketTimeoutMillis = 500))
+                assertIs<ApiResult.Success<*>>(executor.get<List<String>>(server.url))
+                assertEquals(1, pool.connectionCount())
+
+                pool.evictAll()
+
+                assertIs<ApiResult.Success<*>>(executor.get<List<String>>(server.url))
             }
         }
     }

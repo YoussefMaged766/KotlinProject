@@ -16,6 +16,7 @@ import kotlinx.coroutines.flow.asStateFlow
 internal class AndroidConnectivityMonitor(
     context: Context,
     private val logChanges: Boolean,
+    private val onNetworkChanged: () -> Unit,
 ) : ConnectivityMonitor {
 
     private val connectivityManager = context.getSystemService(ConnectivityManager::class.java)
@@ -30,7 +31,14 @@ internal class AndroidConnectivityMonitor(
                 update(capabilities.toStatus())
             }
 
-            override fun onLost(network: Network) = update(NetworkStatus.Offline)
+            // Also called when Wi-Fi hands over to mobile data without ever being offline. Both run on
+            // ConnectivityManager's own thread, so closing sockets here is fine.
+            override fun onAvailable(network: Network) = onNetworkChanged()
+
+            override fun onLost(network: Network) {
+                update(NetworkStatus.Offline)
+                onNetworkChanged()
+            }
 
             override fun onUnavailable() = update(NetworkStatus.Offline)
         })

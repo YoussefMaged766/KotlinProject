@@ -1,5 +1,7 @@
 package org.example.project.categories.presentation.mapper
 
+import kotlinx.collections.immutable.ImmutableList
+import kotlinx.collections.immutable.toImmutableList
 import org.example.project.R
 import org.example.project.categories.domain.model.Category
 import org.example.project.categories.presentation.model.CategoryUi
@@ -11,4 +13,4 @@ internal fun Category.toUi(): CategoryUi = CategoryUi(
     subtitleRes = if (isAll) R.string.categories_all_subtitle else null,
 )
 
-internal fun List<Category>.toUi(): List<CategoryUi> = map(Category::toUi)
+internal fun List<Category>.toUi(): ImmutableList<CategoryUi> = map(Category::toUi).toImmutableList()

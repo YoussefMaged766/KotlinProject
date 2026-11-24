@@ -20,7 +20,7 @@ import org.example.project.core.error.ErrorDisplay
 import org.example.project.core.error.ErrorPresenter
 import org.example.project.core.error.RequestKind
 import org.example.project.core.events.GlobalEvent
-import org.example.project.core.events.GlobalEventBus
+import org.example.project.core.events.GlobalEvents
 import org.example.project.core.result.ApiResult
 import org.example.project.core.result.DataError
 import org.koin.dsl.koinApplication
@@ -81,7 +81,7 @@ class KoinGraphTest {
         try {
             koinApp.koin.get<GetCategoriesUseCase>().invoke()
 
-            assertEquals(setOf<GlobalEvent>(GlobalEvent.UpgradeRequired), koinApp.koin.get<GlobalEventBus>().pending.first())
+            assertEquals(setOf<GlobalEvent>(GlobalEvent.UpgradeRequired), koinApp.koin.get<GlobalEvents>().pending.first())
         } finally {
             koinApp.close()
         }

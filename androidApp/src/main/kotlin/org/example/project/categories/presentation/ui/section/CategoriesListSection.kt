@@ -21,15 +21,18 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
+import kotlinx.collections.immutable.ImmutableList
+import org.example.project.R
 import org.example.project.categories.presentation.CategoriesIntent
 import org.example.project.categories.presentation.model.CategoryUi
 
 @Composable
-fun CategoriesList(categories: List<CategoryUi>, onIntent: (CategoriesIntent) -> Unit) {
+fun CategoriesList(categories: ImmutableList<CategoryUi>, onIntent: (CategoriesIntent) -> Unit) {
     LazyColumn(Modifier.fillMaxSize()) {
         items(categories, key = { it.id }) { category ->
             val onClick = remember(category.id, onIntent) {
@@ -50,6 +53,18 @@ fun CategoryRow(category: CategoryUi, onClick: () -> Unit) {
             { Text(stringResource(subtitleRes)) }
         },
     )
+}
+
+/** A list, so pulling to refresh works here too. */
+@Composable
+fun CategoriesEmptySection() {
+    LazyColumn(Modifier.fillMaxSize()) {
+        item {
+            Box(Modifier.fillParentMaxSize(), contentAlignment = Alignment.Center) {
+                Text(stringResource(R.string.categories_empty))
+            }
+        }
+    }
 }
 
 @Composable
