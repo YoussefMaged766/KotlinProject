@@ -3,7 +3,6 @@ package org.example.project.network
 import io.ktor.client.engine.mock.MockEngine
 import io.ktor.client.engine.mock.MockRequestHandler
 import io.ktor.client.engine.mock.respond
-import io.ktor.client.request.get
 import io.ktor.http.HttpHeaders
 import io.ktor.http.HttpStatusCode
 import io.ktor.http.headersOf
@@ -29,7 +28,6 @@ class ConnectivityAwareExecutorTest {
     private val config = NetworkConfig(
         environment = AppEnvironment.Dev,
         appInfo = AppInfo(platform = "android", appVersion = "1.0", languageTag = "en"),
-        maxRetries = 0,
     )
 
     private val okBody: MockRequestHandler = {
@@ -51,15 +49,11 @@ class ConnectivityAwareExecutorTest {
         handler: MockRequestHandler = okBody
     ): Setup {
         val engine = MockEngine(handler)
-        val client = createHttpClient(engine, config)
-        val executor = RequestExecutor(
-            ErrorMapper(isOnline = { connectivity.status.value.isConnected }),
-            connectivity
-        )
+        val executor = testExecutor(engine, config, connectivity)
         return Setup(
             engine,
             executor
-        ) { wait -> executor.execute(waitForNetworkMillis = wait) { client.get("v1/things") } }
+        ) { wait -> executor.get("v1/things", waitForNetworkMillis = wait) }
     }
 
     @Test

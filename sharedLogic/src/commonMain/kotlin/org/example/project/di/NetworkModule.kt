@@ -4,6 +4,7 @@ import org.example.project.core.config.NetworkConfig
 import org.example.project.core.connectivity.ConnectivityMonitor
 import org.example.project.network.ErrorMapper
 import org.example.project.network.RequestExecutor
+import org.example.project.network.RetryPolicy
 import org.example.project.network.createHttpClient
 import org.koin.core.module.Module
 import org.koin.core.module.dsl.singleOf
@@ -17,5 +18,6 @@ internal fun networkModule(config: NetworkConfig): Module = module {
         val connectivity = get<ConnectivityMonitor>()             // from platformModule
         ErrorMapper(isOnline = { connectivity.status.value.isConnected })
     }
+    single { RetryPolicy(maxRetries = get<NetworkConfig>().maxRetries) }
     singleOf(::RequestExecutor)
 }

@@ -30,8 +30,12 @@ import org.example.project.core.result.TimeoutKind
 internal class ErrorMapper(private val isOnline: () -> Boolean) {
 
     /** For failures that never produced a usable response. Never call it with a CancellationException. */
-    fun fromThrowable(throwable: Throwable, response: HttpResponse? = null): DataError {
-        val details = (response?.let(::detailsOf) ?: ErrorDetails()).copy(cause = throwable.describe())
+    fun fromThrowable(
+        throwable: Throwable,
+        response: HttpResponse? = null,
+        sent: ErrorDetails = ErrorDetails(),
+    ): DataError {
+        val details = (response?.let(::detailsOf) ?: sent).copy(cause = throwable.describe())
         return when (throwable) {
             // Timeouts first: they are IOExceptions too.
             is ConnectTimeoutException -> DataError.Timeout(TimeoutKind.Connect, details)

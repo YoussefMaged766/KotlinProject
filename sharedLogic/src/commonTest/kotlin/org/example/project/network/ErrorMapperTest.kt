@@ -6,9 +6,8 @@ import io.ktor.client.engine.mock.respond
 import io.ktor.client.network.sockets.ConnectTimeoutException
 import io.ktor.client.network.sockets.SocketTimeoutException
 import io.ktor.client.plugins.HttpRequestTimeoutException
-import io.ktor.client.request.get
-import io.ktor.client.request.post
 import io.ktor.http.HttpHeaders
+import io.ktor.http.HttpMethod
 import io.ktor.http.HttpStatusCode
 import io.ktor.http.headersOf
 import kotlinx.coroutines.CancellationException
@@ -17,8 +16,6 @@ import kotlinx.io.IOException
 import org.example.project.core.config.AppEnvironment
 import org.example.project.core.config.AppInfo
 import org.example.project.core.config.NetworkConfig
-import org.example.project.core.connectivity.FakeConnectivityMonitor
-import org.example.project.core.connectivity.NetworkStatus
 import org.example.project.core.result.ApiResult
 import org.example.project.core.result.DataError
 import org.example.project.core.result.TimeoutKind
@@ -31,20 +28,18 @@ import kotlin.test.assertTrue
 
 /**
  * Black-box: real HttpClient + RequestExecutor + ErrorMapper, only the engine is fake.
- * Retries are off (maxRetries = 0) so each case is one request and no real delays.
+ * testExecutor has no retries, so each case is one request.
  */
 class ErrorMapperTest {
 
     private val config = NetworkConfig(
         environment = AppEnvironment.Dev,
         appInfo = AppInfo(platform = "android", appVersion = "1.0", languageTag = "en"),
-        maxRetries = 0,
     )
 
     private suspend fun errorFor(isOnline: Boolean = true, handler: MockRequestHandler): DataError {
-        val client = createHttpClient(MockEngine(handler), config)
-        val executor = RequestExecutor(ErrorMapper(isOnline = { isOnline }), FakeConnectivityMonitor(NetworkStatus.Online))
-        val result = executor.execute<List<String>> { client.get("v1/things") }
+        val executor = testExecutor(MockEngine(handler), config, isOnline = { isOnline })
+        val result = executor.get<List<String>>("v1/things")
         return assertIs<ApiResult.Failure>(result).error
     }
 
@@ -171,11 +166,10 @@ class ErrorMapperTest {
 
     @Test
     fun cancellationIsRethrownNeverAnError() = runTest {
-        val client = createHttpClient(MockEngine { throw CancellationException("screen closed") }, config)
-        val executor = RequestExecutor(ErrorMapper(isOnline = { true }), FakeConnectivityMonitor(NetworkStatus.Online))
+        val executor = testExecutor(MockEngine { throw CancellationException("screen closed") }, config)
 
         assertFailsWith<CancellationException> {
-            executor.execute<List<String>> { client.post("v1/things") }
+            executor.execute<List<String>>(HttpMethod.Post, "v1/things")
         }
     }
 }

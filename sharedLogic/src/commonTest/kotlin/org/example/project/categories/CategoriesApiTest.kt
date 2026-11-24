@@ -11,13 +11,9 @@ import org.example.project.categories.data.remote.CategoriesApi
 import org.example.project.core.config.AppEnvironment
 import org.example.project.core.config.AppInfo
 import org.example.project.core.config.NetworkConfig
-import org.example.project.core.connectivity.FakeConnectivityMonitor
-import org.example.project.core.connectivity.NetworkStatus
 import org.example.project.core.result.ApiResult
 import org.example.project.core.result.DataError
-import org.example.project.network.ErrorMapper
-import org.example.project.network.RequestExecutor
-import org.example.project.network.createHttpClient
+import org.example.project.network.testExecutor
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertIs
@@ -35,7 +31,7 @@ class CategoriesApiTest {
             onRequest(request)
             respond(body, status, headersOf(HttpHeaders.ContentType, "application/json"))
         }
-        return CategoriesApi(createHttpClient(engine, config), RequestExecutor(ErrorMapper(isOnline = { true }), FakeConnectivityMonitor(NetworkStatus.Online)))
+        return CategoriesApi(testExecutor(engine, config))
     }
 
     @Test

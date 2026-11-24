@@ -16,7 +16,7 @@ data class NetworkConfig(
     val appInfo: AppInfo,
     val connectTimeoutMillis: Long = 10_000,      // opening the connection
     val socketTimeoutMillis: Long = 15_000,       // max silence between data packets (stalled weak networks)
-    val requestTimeoutMillis: Long = 30_000,      // the whole request, retries not included
+    val requestTimeoutMillis: Long = 30_000,      // one whole attempt; each retry gets a fresh limit
     val maxRetries: Int = 2,                      // automatic retries for safe (GET) requests
     val slowRequestThresholdMillis: Long = 3_000, // when "Slow connection, still trying…" appears
 ) {

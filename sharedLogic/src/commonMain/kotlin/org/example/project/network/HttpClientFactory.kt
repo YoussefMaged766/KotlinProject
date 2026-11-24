@@ -2,7 +2,6 @@ package org.example.project.network
 
 import io.ktor.client.HttpClient
 import io.ktor.client.engine.HttpClientEngine
-import io.ktor.client.plugins.HttpRequestRetry
 import io.ktor.client.plugins.HttpTimeout
 import io.ktor.client.plugins.contentnegotiation.ContentNegotiation
 import io.ktor.client.plugins.defaultRequest
@@ -47,12 +46,8 @@ internal fun createHttpClient(engine: HttpClientEngine, config: NetworkConfig): 
             sanitizeHeader { it == HttpHeaders.Authorization }
         }
 
-        // ORDER MATTERS: retry is installed BEFORE timeout so a timed-out attempt can be retried.
-        install(HttpRequestRetry) {
-            retryOnServerErrors(maxRetries = config.maxRetries)                     // 5xx
-            retryOnException(maxRetries = config.maxRetries, retryOnTimeout = true) // dropped connection, timeout
-            exponentialDelay()
-        }
+        // Limits for one attempt. Retries are RetryPolicy's job, in RequestExecutor: it decides on our
+        // DataError, which can tell maintenance from an ordinary 503.
         install(HttpTimeout) {
             connectTimeoutMillis = config.connectTimeoutMillis
             socketTimeoutMillis = config.socketTimeoutMillis
