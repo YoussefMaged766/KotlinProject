@@ -51,7 +51,7 @@ final class CategoriesModel: ObservableObject {
             state.categories = (success.data as? [DomainCategory] ?? []).toUi()
         } else {
             let error: any DataError = (result as? ApiResultFailure)?.error ?? DataErrorUnknown(details: nil)
-            state.error = errorPresenter.present(error: error, kind: .initialLoad).toErrorUi()
+            state.error = errorPresenter.present(error: error, kind: .initialload).toErrorUi()
         }
         state.isLoading = false
     }
