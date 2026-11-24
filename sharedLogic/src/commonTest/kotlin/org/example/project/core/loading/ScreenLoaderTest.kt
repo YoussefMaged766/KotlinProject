@@ -222,7 +222,7 @@ class ScreenLoaderTest {
     // ---- Auto reload ---------------------------------------------------------------------------
 
     @Test
-    fun itReloadsByItselfWhenTheNetworkIsBackAndSaysWhy() = runTest {
+    fun itReloadsByItselfWhenTheNetworkIsBack() = runTest {
         val screen = Screen(this, NetworkStatus.Offline) { call -> if (call == 1) failure(DataError.NoInternet()) else success(burger) }
         screen.after(5_000)
 
@@ -230,14 +230,7 @@ class ScreenLoaderTest {
         screen.after(1_000)
 
         assertEquals(loaded(burger), screen.state.content)
-        assertEquals(listOf<LoadEffect>(LoadEffect.ShowBackOnline), screen.effects)
-    }
-
-    @Test
-    fun aManualRetryDoesNotSayBackOnline() = runTest {
-        val screen = Screen(this) { call -> if (call == 1) failure(DataError.ConnectionLost()) else success(burger) }
-        screen.load()
-        assertEquals(emptyList(), screen.effects)
+        assertEquals(emptyList(), screen.effects)                 // the banner says it, no toast
     }
 
     @Test

@@ -26,9 +26,6 @@ import org.example.project.core.result.DataError
 sealed interface LoadEffect {
     /** A toast or a dialog. */
     data class ShowError(val display: ErrorDisplay) : LoadEffect
-
-    /** Tells the user why the screen changed by itself. */
-    data object ShowBackOnline : LoadEffect
 }
 
 /**
@@ -57,7 +54,7 @@ class ScreenLoader<T : Any> internal constructor(
 
     init {
         autoReloadPolicy.reloadSignals(lastError, isVisible = _state.subscriptionCount.map { it > 0 })
-            .onEach { load(isAutomatic = true) }
+            .onEach { load() }
             .launchIn(scope)
 
         globalEvents.pending
@@ -69,9 +66,7 @@ class ScreenLoader<T : Any> internal constructor(
     }
 
     /** First load, retry or refresh: what is on screen decides which. Replaces a load that is still running. */
-    fun load() = load(isAutomatic = false)
-
-    private fun load(isAutomatic: Boolean) {
+    fun load() {
         loadJob?.cancel()
         val kind = _state.value.nextLoadKind
         lastError.value = null
@@ -84,10 +79,7 @@ class ScreenLoader<T : Any> internal constructor(
                 block = request,
             )
             when (result) {
-                is ApiResult.Success -> {
-                    _state.update { it.loaded(result.data) }
-                    if (isAutomatic) _effects.send(LoadEffect.ShowBackOnline)
-                }
+                is ApiResult.Success -> _state.update { it.loaded(result.data) }
                 is ApiResult.Failure -> showFailure(result.error, kind)
             }
         }

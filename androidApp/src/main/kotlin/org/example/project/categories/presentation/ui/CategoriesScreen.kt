@@ -49,10 +49,8 @@ fun CategoriesRoute(
 ) {
     val state by viewModel.state.collectAsStateWithLifecycle()
     val errorHost = rememberErrorHostState(onRetry = { viewModel.onIntent(CategoriesIntent.Retry) })
-    val backOnline = stringResource(R.string.back_online)
     val lifecycleOwner = LocalLifecycleOwner.current
     val currentOnOpenCategory by rememberUpdatedState(onOpenCategory)
-    val currentBackOnline by rememberUpdatedState(backOnline)
 
     LaunchedEffect(viewModel, errorHost, lifecycleOwner) {
         val snackbars = this    // outside repeatOnLifecycle, so leaving the app doesn't cancel the one on screen
@@ -63,7 +61,6 @@ fun CategoriesRoute(
                     is CategoriesEffect.OpenCategory -> currentOnOpenCategory(effect.categoryId)
                     // Launched: a snackbar suspends until it is gone, and must not hold up the next effect.
                     is CategoriesEffect.ShowError -> snackbars.launch { errorHost.show(effect.display) }
-                    CategoriesEffect.ShowBackOnline -> snackbars.launch { errorHost.showNotice(currentBackOnline) }
                 }
             }
         }

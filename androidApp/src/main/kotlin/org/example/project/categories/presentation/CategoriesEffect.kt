@@ -10,7 +10,4 @@ sealed interface CategoriesEffect {
 
     /** A toast or a dialog; full-screen errors are state instead. */
     data class ShowError(val display: ErrorDisplay) : CategoriesEffect
-
-    /** Tells the user why the screen changed by itself. */
-    data object ShowBackOnline : CategoriesEffect
 }

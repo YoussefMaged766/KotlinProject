@@ -161,7 +161,7 @@ class CategoriesViewModelTest {
     }
 
     @Test
-    fun itReloadsByItselfWhenTheNetworkIsBackAndSaysWhy() = test {
+    fun itReloadsByItselfWhenTheNetworkIsBack() = test {
         val screen = Screen(this, NetworkStatus.Offline) { call -> if (call == 1) failure(DataError.NoInternet()) else success(burger) }
         screen.after(5_000)
 
@@ -169,7 +169,7 @@ class CategoriesViewModelTest {
         screen.after(1_000)
 
         assertEquals(loaded(burger), screen.state.content)
-        assertEquals(listOf<CategoriesEffect>(CategoriesEffect.ShowBackOnline), screen.effects)
+        assertEquals(emptyList(), screen.effects)
     }
 
     @Test

@@ -3,17 +3,21 @@ package org.example.project.core.presentation.root
 import android.content.ActivityNotFoundException
 import android.content.Context
 import android.content.Intent
+import androidx.compose.animation.AnimatedContent
+import androidx.compose.animation.SizeTransform
+import androidx.compose.animation.animateColorAsState
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.WindowInsets
-import androidx.compose.foundation.layout.consumeWindowInsets
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.safeDrawingPadding
-import androidx.compose.foundation.layout.statusBars
 import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
@@ -22,9 +26,12 @@ import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.ReadOnlyComposable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.drawBehind
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.LiveRegionMode
@@ -37,6 +44,7 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import org.example.project.R
 import org.example.project.core.app.AppBlock
 import org.example.project.core.app.AppState
+import org.example.project.core.app.NetworkBanner
 import org.koin.androidx.compose.koinViewModel
 
 /** Wraps every screen. Nothing inside it needs to know about the banner or the global events. */
@@ -66,35 +74,72 @@ fun AppRootContent(state: AppState, onIntent: (AppIntent) -> Unit, content: @Com
             onAction = { onIntent(AppIntent.RetryAfterMaintenance) },
         )
 
-        null -> Column(Modifier.fillMaxSize()) {
-            if (state.isOffline) OfflineBanner()
-            // While the banner covers the status bar, the screen below must not leave room for it again. Not animated:
-            // the inset changes at once, so a banner shrinking slowly would make the screen jump.
-            val insets = if (state.isOffline) Modifier.consumeWindowInsets(WindowInsets.statusBars) else Modifier
-            Box(Modifier.weight(1f).then(insets)) { content() }
-        }
+        null -> ScreenWithBanner(banner = state.banner, content = content)
     }
 
     if (state.isSessionExpired) SessionExpiredDialog(onConfirm = { onIntent(AppIntent.SessionExpiredConfirmed) })
 }
 
+/**
+ * The status bar's space belongs to this column, coloured like the banner while there is one, and not to the screen
+ * below. So the banner can grow and shrink without the screen's own insets changing under it.
+ */
 @Composable
-private fun OfflineBanner() {
+private fun ScreenWithBanner(banner: NetworkBanner?, content: @Composable () -> Unit) {
+    val statusBarColor = animateColorAsState(banner.containerColor(), label = "statusBarColor")
+    Column(
+        Modifier
+            .fillMaxSize()
+            .drawBehind { drawRect(statusBarColor.value) }      // read while drawing: no recomposition per frame
+            .statusBarsPadding(),
+    ) {
+        AnimatedContent(
+            targetState = banner,
+            transitionSpec = { fadeIn() togetherWith fadeOut() using SizeTransform() },
+            label = "networkBanner",
+        ) { shown ->
+            if (shown != null) NetworkBannerStrip(shown) else Spacer(Modifier.fillMaxWidth())
+        }
+        Box(Modifier.weight(1f)) { content() }
+    }
+}
+
+@Composable
+private fun NetworkBannerStrip(banner: NetworkBanner) {
     Box(
         modifier = Modifier
             .fillMaxWidth()
-            .background(MaterialTheme.colorScheme.errorContainer)   // light, so the status bar's icons stay readable
-            .statusBarsPadding()
+            .background(banner.containerColor())
             .padding(horizontal = 16.dp, vertical = 8.dp)
             .semantics { liveRegion = LiveRegionMode.Polite },      // TalkBack says it when it appears
         contentAlignment = Alignment.Center,
     ) {
         Text(
-            text = stringResource(R.string.banner_offline),
+            text = stringResource(
+                when (banner) {
+                    NetworkBanner.Offline -> R.string.banner_offline
+                    NetworkBanner.BackOnline -> R.string.banner_back_online
+                }
+            ),
             style = MaterialTheme.typography.labelLarge,
-            color = MaterialTheme.colorScheme.onErrorContainer,
+            color = when (banner) {
+                NetworkBanner.Offline -> MaterialTheme.colorScheme.onErrorContainer
+                NetworkBanner.BackOnline -> OnGreenContainer
+            },
         )
     }
+}
+
+// Material 3 has no "success" colours. Light, so the status bar's dark icons stay readable on it.
+private val GreenContainer = Color(0xFFA5D6A7)
+private val OnGreenContainer = Color(0xFF0B3D0E)
+
+@Composable
+@ReadOnlyComposable
+private fun NetworkBanner?.containerColor(): Color = when (this) {
+    NetworkBanner.Offline -> MaterialTheme.colorScheme.errorContainer
+    NetworkBanner.BackOnline -> GreenContainer
+    null -> MaterialTheme.colorScheme.surface
 }
 
 @Composable

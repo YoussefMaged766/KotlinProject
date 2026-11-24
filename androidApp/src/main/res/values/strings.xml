@@ -8,7 +8,7 @@
     <string name="action_cancel">Cancel</string>
     <string name="action_update">Update</string>
     <string name="banner_offline">No internet connection</string>
-    <string name="back_online">You\'re back online</string>
+    <string name="banner_back_online">Back online</string>
     <string name="slow_connection">Slow connection, still trying…</string>
     <string name="session_expired_message">Your session has expired. Please sign in again.</string>
     <string name="upgrade_title">Update required</string>

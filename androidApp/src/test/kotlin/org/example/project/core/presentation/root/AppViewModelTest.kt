@@ -12,6 +12,7 @@ import org.example.project.FakeGlobalEvents
 import org.example.project.core.app.AppBlock
 import org.example.project.core.app.AppState
 import org.example.project.core.app.AppStatus
+import org.example.project.core.app.NetworkBanner
 import org.example.project.core.connectivity.NetworkStatus
 import org.example.project.core.events.GlobalEvent
 import kotlin.test.AfterTest
@@ -40,17 +41,17 @@ class AppViewModelTest {
 
         connectivity.set(NetworkStatus.Offline)
         runCurrent()
-        assertEquals(AppState(isOffline = true), viewModel.state.value)
+        assertEquals(AppState(banner = NetworkBanner.Offline), viewModel.state.value)
 
-        connectivity.set(NetworkStatus.Weak)                     // connected, so no banner
+        connectivity.set(NetworkStatus.Online)
         runCurrent()
-        assertEquals(AppState(), viewModel.state.value)
+        assertEquals(AppState(banner = NetworkBanner.BackOnline), viewModel.state.value)
     }
 
     @Test
     fun startingOfflineShowsTheBannerFromTheFirstFrame() = runTest(dispatcher) {
         connectivity.set(NetworkStatus.Offline)
-        assertEquals(true, AppViewModel(AppStatus(connectivity, events)).state.value.isOffline)
+        assertEquals(NetworkBanner.Offline, AppViewModel(AppStatus(connectivity, events)).state.value.banner)
     }
 
     @Test

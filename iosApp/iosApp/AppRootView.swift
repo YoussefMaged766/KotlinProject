@@ -6,11 +6,12 @@ import SwiftUI
 final class AppModel: ObservableObject {
 
     struct State: Equatable {
-        var isOffline = false
+        var banner: Banner? = nil
         var block: Block? = nil
         var isSessionExpired = false
     }
 
+    enum Banner { case offline, backOnline }
     enum Block { case upgradeRequired, maintenance }
 
     enum Intent {
@@ -40,7 +41,7 @@ final class AppModel: ObservableObject {
 extension AppState {
     func toUi() -> AppModel.State {
         AppModel.State(
-            isOffline: isOffline,
+            banner: banner.map { $0 == NetworkBanner.offline ? AppModel.Banner.offline : AppModel.Banner.backOnline },
             block: blockedBy.map { $0 == AppBlock.upgraderequired ? AppModel.Block.upgradeRequired : AppModel.Block.maintenance },
             isSessionExpired: isSessionExpired
         )
@@ -61,9 +62,12 @@ struct AppRootView<Screen: View>: View {
         // The screen stays underneath a blocking screen: removing it would throw away its model and its data.
         ZStack {
             VStack(spacing: 0) {
-                if model.state.isOffline { OfflineBanner() }
+                if let banner = model.state.banner {
+                    NetworkBannerView(banner: banner).transition(.move(edge: .top).combined(with: .opacity))
+                }
                 screen
             }
+            .animation(.default, value: model.state.banner)
             .accessibilityHidden(model.state.block != nil)
 
             if let block = model.state.block {
@@ -83,16 +87,23 @@ struct AppRootView<Screen: View>: View {
     }
 }
 
-struct OfflineBanner: View {
-    private let text = String(localized: "banner_offline", defaultValue: "No internet connection")
+struct NetworkBannerView: View {
+    let banner: AppModel.Banner
+
+    private var text: String {
+        switch banner {
+        case .offline: return String(localized: "banner_offline", defaultValue: "No internet connection")
+        case .backOnline: return String(localized: "banner_back_online", defaultValue: "Back online")
+        }
+    }
 
     var body: some View {
         Text(text)
             .font(.subheadline.weight(.medium))
             .frame(maxWidth: .infinity)
             .padding(.vertical, 8)
-            .background(Color.red.opacity(0.15), ignoresSafeAreaEdges: .top)
-            .onAppear { UIAccessibility.post(notification: .announcement, argument: text) }
+            .background((banner == .offline ? Color.red : Color.green).opacity(0.3), ignoresSafeAreaEdges: .top)
+            .task(id: banner) { UIAccessibility.post(notification: .announcement, argument: text) }
     }
 }
 

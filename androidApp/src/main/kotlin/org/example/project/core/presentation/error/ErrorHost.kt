@@ -64,10 +64,6 @@ class ErrorHostState internal constructor(
         }
     }
 
-    suspend fun showNotice(text: String) {
-        showSnackbar(text, actionLabel = null, SnackbarDuration.Short)
-    }
-
     internal fun dismissDialog() {
         dialog = null
     }

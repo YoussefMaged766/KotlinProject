@@ -8,7 +8,6 @@ final class ErrorHost: ObservableObject {
     struct Toast: Equatable {
         let id = UUID()
         let error: ErrorUi
-        let seconds: Double
     }
 
     /// The newest toast replaces the one on screen, so they never queue up.
@@ -18,15 +17,12 @@ final class ErrorHost: ObservableObject {
     func show(_ effect: any LoadEffect) {
         if let showError = effect as? LoadEffectShowError {
             show(showError.display)
-        } else if effect is LoadEffectShowBackOnline {
-            let text = String(localized: "back_online", defaultValue: "You're back online")
-            toast = Toast(error: ErrorUi(text: text, technicalDetails: nil, canRetry: false), seconds: 4)
         }
     }
 
     private func show(_ display: any ErrorDisplay) {
         if let toast = display as? ErrorDisplayToast {
-            self.toast = Toast(error: toast.message.toUi(canRetry: toast.canRetry), seconds: 10)
+            self.toast = Toast(error: toast.message.toUi(canRetry: toast.canRetry))
         } else if let dialog = display as? ErrorDisplayDialog {
             self.dialog = dialog.message.toUi(canRetry: dialog.canRetry)
         }
@@ -39,16 +35,18 @@ final class ErrorHost: ObservableObject {
 extension View {
     /// Place once per screen.
     func errorHost(_ host: ErrorHost, onRetry: @escaping () -> Void) -> some View {
-        modifier(ErrorHostModifier(host: host, onRetry: onRetry))
+        ErrorHostView(host: host, onRetry: onRetry, screen: self)
     }
 }
 
-private struct ErrorHostModifier: ViewModifier {
+/// A view rather than a ViewModifier: that protocol needs the name Content, which SharedLogic also exports.
+private struct ErrorHostView<Screen: View>: View {
     @ObservedObject var host: ErrorHost
     let onRetry: () -> Void
+    let screen: Screen
 
-    func body(content: Content) -> some View {
-        content
+    var body: some View {
+        screen
             .overlay(alignment: .bottom) {
                 if let toast = host.toast {
                     ToastView(error: toast.error) {
@@ -57,7 +55,7 @@ private struct ErrorHostModifier: ViewModifier {
                     }
                     .task(id: toast.id) {
                         UIAccessibility.post(notification: .announcement, argument: toast.error.text)
-                        try? await Task.sleep(for: .seconds(toast.seconds))
+                        try? await Task.sleep(for: .seconds(10))
                         if !Task.isCancelled { host.dismissToast() }
                     }
                 }
