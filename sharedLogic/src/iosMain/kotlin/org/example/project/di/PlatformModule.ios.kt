@@ -8,6 +8,9 @@ import org.koin.core.module.Module
 import org.koin.dsl.module
 
 internal actual val platformModule: Module = module {
-    single<HttpClientEngine> { Darwin.create() }
+    single<HttpClientEngine> { createDarwinEngine() }
     single<ConnectivityMonitor> { IosConnectivityMonitor() }
 }
+
+/** Shared with DarwinEngineTest, so the tests run on the engine the app really uses. */
+internal fun createDarwinEngine(): HttpClientEngine = Darwin.create()
