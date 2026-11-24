@@ -2,6 +2,7 @@ package org.example.project.network
 
 import io.ktor.client.request.setBody
 import io.ktor.http.HttpMethod
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.runBlocking
 import org.example.project.core.config.AppEnvironment
 import org.example.project.core.config.AppInfo
@@ -14,6 +15,8 @@ import platform.posix.usleep
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertIs
+import kotlin.test.assertTrue
+import kotlin.time.Duration.Companion.milliseconds
 
 /** The iOS twin of OkHttpEngineTest: the real NSURLSession engine against a real socket. */
 class DarwinEngineTest {
@@ -32,17 +35,24 @@ class DarwinEngineTest {
 
     @Test
     fun aPostIsSentOnlyOnceWhenItsReusedConnectionDrops() {
-        // Connection 1 answers a GET, then drops the POST that reuses it. Any resend would be answered.
+        // A connection answers GETs, then drops the POST that reuses it. Any resend would be answered.
         withServer({ request, socket ->
-            if (request == "POST" && requests.count { it == "POST" } == 1) socket.close() else socket.answerOk()
+            if (request == "POST" && requests.count { it.method == "POST" } == 1) socket.close() else socket.answerOk()
         }) { server ->
             val executor = executor()
-            assertIs<ApiResult.Success<*>>(executor.get<List<String>>(server.url))
+            repeat(3) {
+                assertIs<ApiResult.Success<*>>(executor.get<List<String>>(server.url))
+                delay(300.milliseconds)         // NSURLSession takes a moment to return a connection to its pool
+            }
 
             val result = executor.execute<List<String>>(HttpMethod.Post, server.url) { setBody("order") }
 
-            assertEquals(1, server.requests.count { it == "POST" }, "the order reached the server more than once")
-            assertEquals(1, server.connections, "the POST should have reused the connection of the GET")
+            val posts = server.requests.filter { it.method == "POST" }
+            assertEquals(1, posts.size, "the order reached the server more than once: ${server.requests}")
+            assertTrue(
+                server.requests.any { it.method == "GET" && it.connection == posts.single().connection },
+                "the POST did not reuse a connection, so this proved nothing: ${server.requests}",
+            )
             assertIs<DataError.ConnectionLost>(errorOf(result))
         }
     }

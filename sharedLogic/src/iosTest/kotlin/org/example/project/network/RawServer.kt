@@ -39,10 +39,11 @@ import platform.posix.close as closeDescriptor
 
 /** A keep-alive HTTP/1.1 server that does exactly what [onRequest] says after reading each request. */
 internal class RawServer(private val onRequest: RawServer.(method: String, socket: RawSocket) -> Unit) {
-    private val received = MutableStateFlow(emptyList<String>())
-    private val accepted = MutableStateFlow(0)
-    val requests: List<String> get() = received.value
-    val connections: Int get() = accepted.value
+    /** [connection] counts from 1, in the order the server accepted them. */
+    data class Request(val method: String, val connection: Int)
+
+    private val received = MutableStateFlow(emptyList<Request>())
+    val requests: List<Request> get() = received.value
 
     private val scope = CoroutineScope(Dispatchers.IO)
     private val serverFd = socket(AF_INET, SOCK_STREAM, 0)
@@ -51,11 +52,12 @@ internal class RawServer(private val onRequest: RawServer.(method: String, socke
     init {
         check(listen(serverFd, 50) == 0) { "listen failed" }
         scope.launch {
+            var connection = 0
             while (true) {
                 val fd = accept(serverFd, null, null)
                 if (fd < 0) break                       // the server was closed
-                accepted.update { it + 1 }
-                launch { serve(RawSocket(fd)) }
+                val number = ++connection
+                launch { serve(RawSocket(fd), number) }
             }
         }
     }
@@ -74,7 +76,7 @@ internal class RawServer(private val onRequest: RawServer.(method: String, socke
         ((port and 0xFF) shl 8) or (port shr 8)         // network byte order -> Int
     }
 
-    private fun serve(socket: RawSocket) {
+    private fun serve(socket: RawSocket, connection: Int) {
         while (!socket.isClosed) {
             val method = socket.readLine()?.substringBefore(' ') ?: break
             var contentLength = 0
@@ -84,7 +86,7 @@ internal class RawServer(private val onRequest: RawServer.(method: String, socke
                 if (header.startsWith("Content-Length:", ignoreCase = true)) contentLength = header.substringAfter(':').trim().toInt()
             }
             repeat(contentLength) { socket.read() }
-            received.update { it + method }
+            received.update { it + Request(method, connection) }
             onRequest(method, socket)
         }
         socket.close()

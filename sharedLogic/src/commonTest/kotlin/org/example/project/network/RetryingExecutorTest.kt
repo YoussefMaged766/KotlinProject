@@ -14,6 +14,7 @@ import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.async
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.test.StandardTestDispatcher
 import kotlinx.coroutines.test.TestScope
 import kotlinx.coroutines.test.currentTime
 import kotlinx.coroutines.test.runTest
@@ -48,10 +49,17 @@ class RetryingExecutorTest {
         val sent: Int get() = sentCount()
     }
 
-    /** Answers with [replies] in order; the last one repeats. */
-    private fun fixture(vararg replies: Reply): Fixture {
+    /**
+     * Answers with [replies] in order; the last one repeats. The engine runs on the test's own dispatcher:
+     * on a real thread, virtual time would jump past a backoff while the first request is still being sent.
+     */
+    private fun TestScope.fixture(vararg replies: Reply): Fixture {
         var index = 0
-        val engine = MockEngine { replies[minOf(index++, replies.lastIndex)].invoke(this) }
+        val engine = MockEngine.create {
+            dispatcher = StandardTestDispatcher(testScheduler)
+            reuseHandlers = true
+            addHandler { replies[minOf(index++, replies.lastIndex)].invoke(this) }
+        }
         return Fixture(testExecutor(engine, config, connectivity, RetryPolicy(config.maxRetries)), sentCount = { index })
     }
 
