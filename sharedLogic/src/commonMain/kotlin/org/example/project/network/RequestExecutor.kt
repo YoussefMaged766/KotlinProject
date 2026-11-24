@@ -12,6 +12,8 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.withTimeoutOrNull
 import org.example.project.core.connectivity.ConnectivityMonitor
+import org.example.project.core.events.GlobalEventBus
+import org.example.project.core.events.toGlobalEvent
 import org.example.project.core.result.ApiResult
 import org.example.project.core.result.DataError
 import org.example.project.core.result.ErrorDetails
@@ -26,6 +28,7 @@ internal class RequestExecutor(
     private val errorMapper: ErrorMapper,
     private val connectivity: ConnectivityMonitor,
     private val retryPolicy: RetryPolicy,
+    private val events: GlobalEventBus,
 ) {
 
     suspend inline fun <reified T> get(
@@ -82,6 +85,7 @@ internal class RequestExecutor(
             return ApiResult.Failure(DataError.NoInternet(sent.copy(cause = "Offline before sending")))
         }
 
+        val sentAt = events.now()
         val response = try {
             client.request(path) {
                 this.method = method
@@ -93,7 +97,11 @@ internal class RequestExecutor(
             return ApiResult.Failure(errorMapper.fromThrowable(e, sent = sent))
         }
 
-        if (!response.status.isSuccess()) return ApiResult.Failure(errorMapper.fromResponse(response))
+        if (!response.status.isSuccess()) {
+            val error = errorMapper.fromResponse(response)
+            error.toGlobalEvent()?.let { events.raise(it, sentAt) }     // the caller still gets its error below
+            return ApiResult.Failure(error)
+        }
 
         return try {
             val data = readData(response)

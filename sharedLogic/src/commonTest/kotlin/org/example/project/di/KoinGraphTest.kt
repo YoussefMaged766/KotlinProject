@@ -6,6 +6,7 @@ import io.ktor.client.engine.mock.respond
 import io.ktor.http.HttpHeaders
 import io.ktor.http.HttpStatusCode
 import io.ktor.http.headersOf
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.test.runTest
 import org.example.project.categories.domain.model.Category
 import org.example.project.categories.domain.usecase.GetCategoriesUseCase
@@ -15,6 +16,8 @@ import org.example.project.core.config.NetworkConfig
 import org.example.project.core.connectivity.ConnectivityMonitor
 import org.example.project.core.connectivity.FakeConnectivityMonitor
 import org.example.project.core.connectivity.NetworkStatus
+import org.example.project.core.events.GlobalEvent
+import org.example.project.core.events.GlobalEventBus
 import org.example.project.core.result.ApiResult
 import org.koin.dsl.koinApplication
 import org.koin.dsl.module
@@ -44,6 +47,24 @@ class KoinGraphTest {
                     headers = headersOf(HttpHeaders.ContentType, "application/json"),
                 )
             }
+        }
+    }
+
+    @Test
+    fun theAppRootSeesEventsRaisedByAnyRequest() = runTest {
+        val blockedVersion = module {
+            single<HttpClientEngine> { MockEngine { respond("", HttpStatusCode.UpgradeRequired) } }
+        }
+        val koinApp = koinApplication {
+            allowOverride(true)
+            modules(sharedModules(config) + fakeEngineModule + blockedVersion)
+        }
+        try {
+            koinApp.koin.get<GetCategoriesUseCase>().invoke()
+
+            assertEquals(setOf<GlobalEvent>(GlobalEvent.UpgradeRequired), koinApp.koin.get<GlobalEventBus>().pending.first())
+        } finally {
+            koinApp.close()
         }
     }
 

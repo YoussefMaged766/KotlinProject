@@ -55,7 +55,7 @@ internal class ErrorMapper(private val isOnline: () -> Boolean) {
 
         return when (val status = response.status.value) {
             400, 422 -> DataError.Validation(fieldErrorsFrom(data), details)
-            401 -> DataError.Unauthorized(details)
+            401 -> DataError.Unauthorized(hadSession = HttpHeaders.Authorization in response.request.headers, details = details)
             403 -> DataError.Forbidden(details)
             404 -> DataError.NotFound(details)
             409 -> DataError.Business(code = data?.stringOrNull(BUSINESS_CODE_FIELD), details = details)

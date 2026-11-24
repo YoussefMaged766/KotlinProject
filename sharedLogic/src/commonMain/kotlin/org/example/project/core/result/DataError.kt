@@ -29,8 +29,11 @@ sealed interface DataError {
     /** 400 / 422. [fieldErrors] maps a field name to its message, for inline display. */
     data class Validation(val fieldErrors: Map<String, String>, override val details: ErrorDetails? = null) : Http
 
-    /** 401: session missing or expired. Handled app-wide (log out / refresh), not per screen. */
-    data class Unauthorized(override val details: ErrorDetails? = null) : Http
+    /**
+     * 401. With [hadSession] (the request carried a token) the session expired: handled app-wide.
+     * Without it, e.g. a wrong password at login, it belongs to the screen that asked.
+     */
+    data class Unauthorized(val hadSession: Boolean, override val details: ErrorDetails? = null) : Http
 
     /** 403. */
     data class Forbidden(override val details: ErrorDetails? = null) : Http

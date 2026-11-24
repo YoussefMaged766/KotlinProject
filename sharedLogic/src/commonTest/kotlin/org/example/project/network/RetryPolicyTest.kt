@@ -33,7 +33,7 @@ class RetryPolicyTest {
         DataError.NoInternet(),
         DataError.Maintenance(),
         DataError.UpgradeRequired(),
-        DataError.Unauthorized(),
+        DataError.Unauthorized(hadSession = true),
         DataError.Forbidden(),
         DataError.NotFound(),
         DataError.Validation(emptyMap()),
