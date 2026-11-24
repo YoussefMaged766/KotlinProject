@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Merged into every app that uses this module, so none of them can forget these. -->
+<manifest xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <!-- Ktor requests -->
+    <uses-permission android:name="android.permission.INTERNET" />
+
+    <!-- AndroidConnectivityMonitor -->
+    <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
+
+</manifest>

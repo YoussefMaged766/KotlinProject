@@ -11,9 +11,12 @@ import kotlinx.coroutines.flow.asStateFlow
 
 /**
  * Follows the device's default network. App-lifetime singleton (Koin `single`), so the callback is
- * registered once and never unregistered. Needs ACCESS_NETWORK_STATE in the app manifest.
+ * registered once and never unregistered. Needs ACCESS_NETWORK_STATE (in this module's manifest).
  */
-internal class AndroidConnectivityMonitor(context: Context) : ConnectivityMonitor {
+internal class AndroidConnectivityMonitor(
+    context: Context,
+    private val logChanges: Boolean,
+) : ConnectivityMonitor {
 
     private val connectivityManager = context.getSystemService(ConnectivityManager::class.java)
 
@@ -21,7 +24,7 @@ internal class AndroidConnectivityMonitor(context: Context) : ConnectivityMonito
     override val status: StateFlow<NetworkStatus> = _status.asStateFlow()
 
     init {
-        Log.d(TAG, "Initial status: ${_status.value}")
+        log("Initial status: ${_status.value}")
         connectivityManager.registerDefaultNetworkCallback(object : ConnectivityManager.NetworkCallback() {
             override fun onCapabilitiesChanged(network: Network, capabilities: NetworkCapabilities) {
                 update(capabilities.toStatus())
@@ -34,8 +37,12 @@ internal class AndroidConnectivityMonitor(context: Context) : ConnectivityMonito
     }
 
     private fun update(newStatus: NetworkStatus) {
-        if (_status.value != newStatus) Log.d(TAG, "Status: ${_status.value} -> $newStatus")
+        if (_status.value != newStatus) log("Status: ${_status.value} -> $newStatus")
         _status.value = newStatus
+    }
+
+    private fun log(message: String) {
+        if (logChanges) Log.d(TAG, message)      // scripts/network.ps1 status reads this
     }
 
     private fun currentStatus(): NetworkStatus =

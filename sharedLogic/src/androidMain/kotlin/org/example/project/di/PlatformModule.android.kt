@@ -3,6 +3,8 @@ package org.example.project.di
 import io.ktor.client.engine.HttpClientEngine
 import io.ktor.client.engine.okhttp.OkHttp
 import okhttp3.OkHttpClient
+import org.example.project.core.config.NetworkConfig
+import org.example.project.core.config.NetworkLogLevel
 import org.example.project.core.connectivity.AndroidConnectivityMonitor
 import org.example.project.core.connectivity.ConnectivityMonitor
 import org.koin.android.ext.koin.androidContext
@@ -11,7 +13,7 @@ import org.koin.dsl.module
 
 internal actual val platformModule: Module = module {
     single<HttpClientEngine> { createOkHttpEngine() }
-    single<ConnectivityMonitor> { AndroidConnectivityMonitor(androidContext()) }
+    single<ConnectivityMonitor> { AndroidConnectivityMonitor(androidContext(), logChanges = get<NetworkConfig>().logLevel != NetworkLogLevel.None) }
 }
 
 /**
