@@ -14,10 +14,13 @@ import kotlinx.coroutines.launch
 import org.example.project.categories.domain.usecase.GetCategoriesUseCase
 import org.example.project.categories.presentation.mapper.toErrorUi
 import org.example.project.categories.presentation.mapper.toUi
+import org.example.project.core.error.ErrorPresenter
+import org.example.project.core.error.RequestKind
 import org.example.project.core.result.ApiResult
 
 class CategoriesViewModel(
     private val getCategoriesUseCase: GetCategoriesUseCase,
+    private val errorPresenter: ErrorPresenter,
 ) : ViewModel() {
 
     private val _state = MutableStateFlow(CategoriesState())
@@ -50,7 +53,7 @@ class CategoriesViewModel(
                     it.copy(isLoading = false, categories = result.data.toUi())
                 }
                 is ApiResult.Failure -> _state.update {
-                    it.copy(isLoading = false, error = result.error.toErrorUi())
+                    it.copy(isLoading = false, error = errorPresenter.present(result.error, RequestKind.InitialLoad).toErrorUi())
                 }
             }
         }

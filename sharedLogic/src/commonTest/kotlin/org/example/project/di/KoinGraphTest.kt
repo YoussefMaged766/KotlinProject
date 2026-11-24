@@ -16,13 +16,18 @@ import org.example.project.core.config.NetworkConfig
 import org.example.project.core.connectivity.ConnectivityMonitor
 import org.example.project.core.connectivity.FakeConnectivityMonitor
 import org.example.project.core.connectivity.NetworkStatus
+import org.example.project.core.error.ErrorDisplay
+import org.example.project.core.error.ErrorPresenter
+import org.example.project.core.error.RequestKind
 import org.example.project.core.events.GlobalEvent
 import org.example.project.core.events.GlobalEventBus
 import org.example.project.core.result.ApiResult
+import org.example.project.core.result.DataError
 import org.koin.dsl.koinApplication
 import org.koin.dsl.module
 import kotlin.test.Test
 import kotlin.test.assertEquals
+import kotlin.test.assertIs
 
 /**
  * Builds the real shared modules in an isolated container (not the global startKoin one),
@@ -46,6 +51,20 @@ class KoinGraphTest {
                     status = HttpStatusCode.OK,
                     headers = headersOf(HttpHeaders.ContentType, "application/json"),
                 )
+            }
+        }
+    }
+
+    @Test
+    fun technicalDetailsFollowTheEnvironment() {
+        AppEnvironment.entries.forEach { environment ->
+            val koinApp = koinApplication { modules(sharedModules(config.copy(environment = environment))) }
+            try {
+                val display = koinApp.koin.get<ErrorPresenter>().present(DataError.Unknown(), RequestKind.InitialLoad)
+                val details = assertIs<ErrorDisplay.FullScreen>(display).message.technicalDetails
+                assertEquals(environment.showTechnicalDetails, details != null, "$environment")
+            } finally {
+                koinApp.close()
             }
         }
     }

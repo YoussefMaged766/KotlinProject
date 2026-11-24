@@ -13,8 +13,8 @@ sealed interface DataError {
 
     sealed interface Network : DataError
 
-    /** Offline before sending, or the connection failed while the device was offline. */
-    data class NoInternet(override val details: ErrorDetails? = null) : Network
+    /** Offline. With [maybeSent] the connection broke while sending, so the server may have the request. */
+    data class NoInternet(val maybeSent: Boolean = false, override val details: ErrorDetails? = null) : Network
 
     /** The device was online but the connection dropped mid-request (reset, closed, unreachable). */
     data class ConnectionLost(override val details: ErrorDetails? = null) : Network

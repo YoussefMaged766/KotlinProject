@@ -5,6 +5,7 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Button
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
@@ -23,9 +24,19 @@ fun CategoriesErrorSection(error: ErrorUi, onRetry: () -> Unit) {
         horizontalAlignment = Alignment.CenterHorizontally,
     ) {
         Text(
-            text = stringResource(error.messageRes, *error.formatArgs.toTypedArray()),
+            text = error.serverText ?: stringResource(error.messageRes),
             textAlign = TextAlign.Center,
         )
-        Button(onClick = onRetry) { Text(stringResource(R.string.action_try_again)) }
+        if (error.technicalDetails != null) {
+            Text(
+                text = error.technicalDetails,
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                textAlign = TextAlign.Center,
+            )
+        }
+        if (error.canRetry) {
+            Button(onClick = onRetry) { Text(stringResource(R.string.action_try_again)) }
+        }
     }
 }

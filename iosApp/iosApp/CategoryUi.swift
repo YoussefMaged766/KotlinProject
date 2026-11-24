@@ -28,25 +28,3 @@ extension DomainCategory {
 extension Array where Element == DomainCategory {
     func toUi() -> [CategoryUi] { map { $0.toUi() } }
 }
-
-/// DataError -> the message the user sees, the Swift twin of Android's DataError.toErrorUi().
-extension DataError {
-    func toMessage() -> String {
-        switch self {
-        case is DataErrorNoInternet:
-            return String(localized: "error_no_internet", defaultValue: "No connection. Check your internet and try again.")
-        case is DataErrorConnectionLost:
-            return String(localized: "error_connection_lost", defaultValue: "The connection dropped. Check your internet and try again.")
-        case is DataErrorTimeout:
-            return String(localized: "error_timeout", defaultValue: "The server took too long to answer. Try again.")
-        case let server as DataErrorServer:
-            let format = String(localized: "error_server", defaultValue: "Server error %@: %@")
-            return String(format: format, String(server.status), server.details?.serverMessage ?? "")
-        case is DataErrorBadResponse:
-            return String(localized: "error_bad_response", defaultValue: "The server sent something the app couldn't read.")
-        default:
-            // Interim for phase 2: phase 6 replaces this with the shared ErrorPresenter + MessageKey.
-            return String(localized: "error_generic", defaultValue: "Something went wrong. Try again.")
-        }
-    }
-}

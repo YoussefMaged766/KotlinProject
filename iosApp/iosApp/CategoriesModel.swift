@@ -8,7 +8,7 @@ final class CategoriesModel: ObservableObject {
     struct State {
         var isLoading = true
         var categories: [CategoryUi] = []
-        var errorMessage: String? = nil
+        var error: ErrorUi? = nil
     }
 
     enum Intent {
@@ -23,10 +23,12 @@ final class CategoriesModel: ObservableObject {
     var onOpenCategory: (String) -> Void = { categoryId in print("Open \(categoryId)") }
 
     private let getCategoriesUseCase: GetCategoriesUseCase
+    private let errorPresenter: ErrorPresenter
     private var loadTask: Task<Void, Never>?
 
-    init(getCategoriesUseCase: GetCategoriesUseCase) {
+    init(getCategoriesUseCase: GetCategoriesUseCase, errorPresenter: ErrorPresenter) {
         self.getCategoriesUseCase = getCategoriesUseCase
+        self.errorPresenter = errorPresenter
     }
 
     /// The only entry point, like onIntent on Android.
@@ -42,15 +44,14 @@ final class CategoriesModel: ObservableObject {
 
     private func loadCategories() async {
         state.isLoading = true
-        state.errorMessage = nil
+        state.error = nil
 
         let result = await fetchCategories()
         if let success = result as? ApiResultSuccess<NSArray> {
             state.categories = (success.data as? [DomainCategory] ?? []).toUi()
-        } else if let failure = result as? ApiResultFailure {
-            state.errorMessage = failure.error.toMessage()
         } else {
-            state.errorMessage = DataErrorUnknown(details: nil).toMessage()
+            let error: any DataError = (result as? ApiResultFailure)?.error ?? DataErrorUnknown(details: nil)
+            state.error = errorPresenter.present(error: error, kind: .initialLoad).toErrorUi()
         }
         state.isLoading = false
     }

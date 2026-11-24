@@ -6,7 +6,11 @@
     <string name="error_no_internet">No connection. Check your internet and try again.</string>
     <string name="error_connection_lost">The connection dropped. Check your internet and try again.</string>
     <string name="error_timeout">The server took too long to answer. Try again.</string>
-    <string name="error_generic">Something went wrong. Try again.</string>
-    <string name="error_bad_response">The server sent something the app couldn\'t read.</string>
-    <string name="error_server">Server error %1$s: %2$s</string>
+    <string name="error_server">The server had a problem. Try again in a moment.</string>
+    <string name="error_rate_limited">Too many requests. Wait a moment, then try again.</string>
+    <string name="error_not_allowed">You don\'t have access to this.</string>
+    <string name="error_not_found">This is no longer available.</string>
+    <string name="error_invalid_input">Some of the information isn\'t valid. Check it and try again.</string>
+    <string name="error_outcome_unknown">We couldn\'t confirm whether this went through. Check before trying again.</string>
+    <string name="error_generic">Something went wrong.</string>
 </resources>

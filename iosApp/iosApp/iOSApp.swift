@@ -16,7 +16,10 @@ struct iOSApp: App {
 
     var body: some Scene {
         WindowGroup {
-            CategoriesView(getCategoriesUseCase: IosKoin.shared.getCategoriesUseCase())
+            CategoriesView(
+                getCategoriesUseCase: IosKoin.shared.getCategoriesUseCase(),
+                errorPresenter: IosKoin.shared.errorPresenter()
+            )
         }
     }
 }

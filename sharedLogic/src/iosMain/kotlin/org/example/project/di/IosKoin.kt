@@ -4,6 +4,7 @@ import org.example.project.categories.domain.usecase.GetCategoriesUseCase
 import org.example.project.core.config.AppEnvironment
 import org.example.project.core.config.AppInfo
 import org.example.project.core.config.NetworkConfig
+import org.example.project.core.error.ErrorPresenter
 import org.koin.core.component.KoinComponent
 import org.koin.core.component.get
 
@@ -27,4 +28,6 @@ object IosKoin : KoinComponent {
     }
 
     fun getCategoriesUseCase(): GetCategoriesUseCase = get()
+
+    fun errorPresenter(): ErrorPresenter = get()
 }

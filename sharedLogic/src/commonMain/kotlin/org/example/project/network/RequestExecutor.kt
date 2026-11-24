@@ -82,7 +82,7 @@ internal class RequestExecutor(
 
         // R2: never send a request we already know can't succeed. Checked again before every retry.
         if (!awaitConnection(waitForNetworkMillis)) {
-            return ApiResult.Failure(DataError.NoInternet(sent.copy(cause = "Offline before sending")))
+            return ApiResult.Failure(DataError.NoInternet(details = sent.copy(cause = "Offline before sending")))
         }
 
         val sentAt = events.now()

@@ -5,8 +5,11 @@ import SwiftUI
 struct CategoriesView: View {
     @StateObject private var model: CategoriesModel
 
-    init(getCategoriesUseCase: GetCategoriesUseCase) {
-        _model = StateObject(wrappedValue: CategoriesModel(getCategoriesUseCase: getCategoriesUseCase))
+    init(getCategoriesUseCase: GetCategoriesUseCase, errorPresenter: ErrorPresenter) {
+        _model = StateObject(wrappedValue: CategoriesModel(
+            getCategoriesUseCase: getCategoriesUseCase,
+            errorPresenter: errorPresenter
+        ))
     }
 
     var body: some View {
@@ -14,8 +17,8 @@ struct CategoriesView: View {
             Group {
                 if model.state.isLoading {
                     CategoriesShimmerList()
-                } else if let message = model.state.errorMessage {
-                    CategoriesErrorSection(message: message) { model.send(.retry) }
+                } else if let error = model.state.error {
+                    CategoriesErrorSection(error: error) { model.send(.retry) }
                 } else {
                     CategoriesList(categories: model.state.categories) { model.send(.categoryTapped(id: $0)) }
                 }
@@ -66,13 +69,18 @@ struct CategoriesShimmerList: View {
 }
 
 struct CategoriesErrorSection: View {
-    let message: String
+    let error: ErrorUi
     let onRetry: () -> Void
 
     var body: some View {
         VStack(spacing: 12) {
-            Text(message).multilineTextAlignment(.center)
-            Button(String(localized: "action_try_again", defaultValue: "Try again"), action: onRetry)
+            Text(error.text).multilineTextAlignment(.center)
+            if let details = error.technicalDetails {
+                Text(details).font(.caption).foregroundStyle(.secondary).multilineTextAlignment(.center)
+            }
+            if error.canRetry {
+                Button(String(localized: "action_try_again", defaultValue: "Try again"), action: onRetry)
+            }
         }
         .padding(24)
     }

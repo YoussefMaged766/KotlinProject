@@ -19,6 +19,7 @@ import org.example.project.core.result.ApiResult
 import org.example.project.core.result.DataError
 import kotlin.test.Test
 import kotlin.test.assertEquals
+import kotlin.test.assertFalse
 import kotlin.test.assertIs
 import kotlin.test.assertTrue
 
@@ -63,7 +64,8 @@ class ConnectivityAwareExecutorTest {
 
         val result = setup.run(0)
 
-        assertIs<DataError.NoInternet>(assertIs<ApiResult.Failure>(result).error)
+        val error = assertIs<DataError.NoInternet>(assertIs<ApiResult.Failure>(result).error)
+        assertFalse(error.maybeSent)
         assertTrue(
             setup.engine.requestHistory.isEmpty(),
             "no request may reach the network while offline"

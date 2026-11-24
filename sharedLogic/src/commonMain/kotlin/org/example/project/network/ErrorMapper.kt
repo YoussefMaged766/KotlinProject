@@ -42,7 +42,7 @@ internal class ErrorMapper(private val isOnline: () -> Boolean) {
             is SocketTimeoutException -> DataError.Timeout(TimeoutKind.Socket, details)
             is HttpRequestTimeoutException -> DataError.Timeout(TimeoutKind.Request, details)
             is ContentConvertException, is SerializationException -> DataError.BadResponse(details)
-            is IOException -> if (isOnline()) DataError.ConnectionLost(details) else DataError.NoInternet(details)
+            is IOException -> if (isOnline()) DataError.ConnectionLost(details) else DataError.NoInternet(maybeSent = true, details = details)
             else -> DataError.Unknown(details)
         }
     }

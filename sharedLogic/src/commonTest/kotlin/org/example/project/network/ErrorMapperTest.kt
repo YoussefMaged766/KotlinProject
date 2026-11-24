@@ -143,7 +143,8 @@ class ErrorMapperTest {
 
     @Test
     fun ioFailureWhileOfflineIsNoInternet() = runTest {
-        assertIs<DataError.NoInternet>(errorFor(isOnline = false) { throw IOException("unreachable") })
+        val error = errorFor(isOnline = false) { throw IOException("unreachable") }
+        assertTrue(assertIs<DataError.NoInternet>(error).maybeSent)
     }
 
     @Test
